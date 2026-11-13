@@ -1,0 +1,8 @@
+# Private parent documents
+*.docx
+*.doc
+
+# System and OS files
+.DS_Store
+Thumbs.db
+desktop.ini
