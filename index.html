@@ -5,10 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <meta name="theme-color" content="#1F6F8B">
   <title>Αθήνα Quest</title>
+
   <!-- Google Font Nunito (υποστηρίζει ελληνικά) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS για τον διαδραστικό χάρτη Αθήνας -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 
   <style>
     /* ==========================================================================
@@ -22,45 +26,64 @@
       --sand: #FFF6E9;
       --ink: #1E2A32;
       --muted: #5C6B73;
-      --card: #FFFFFF;
-      --card-border: rgba(30, 42, 50, 0.08);
-      --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.05);
-      --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.08);
-      --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.12);
-      --radius-sm: 8px;
-      --radius-md: 12px;
-      --radius-lg: 16px;
+      --card: rgba(255, 255, 255, 0.92);
+      --card-solid: #FFFFFF;
+      --card-border: rgba(30, 42, 50, 0.09);
+      --shadow-sm: 0 4px 12px rgba(31, 111, 139, 0.06);
+      --shadow-md: 0 8px 22px rgba(31, 111, 139, 0.10);
+      --shadow-lg: 0 14px 34px rgba(30, 42, 50, 0.16);
+      --radius-sm: 10px;
+      --radius-md: 14px;
+      --radius-lg: 18px;
       --radius-full: 9999px;
       --font-main: 'Nunito', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       --transition: 250ms ease;
+
+      /* Modern animated background palette (Light) */
+      --bg-grad-1: #FFF5E4;
+      --bg-grad-2: #FFE8CC;
+      --bg-grad-3: #E3F4F6;
+      --bg-grad-4: #EEF6E5;
     }
 
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
         --sand: #14202A;
-        --card: #1C2B36;
+        --card: rgba(28, 43, 54, 0.9);
+        --card-solid: #1C2B36;
         --ink: #F2F5F7;
         --muted: #A9B8C2;
-        --card-border: rgba(255, 255, 255, 0.1);
-        --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.3);
-        --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
-        --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.5);
+        --card-border: rgba(255, 255, 255, 0.12);
+        --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.35);
+        --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.45);
+        --shadow-lg: 0 14px 34px rgba(0, 0, 0, 0.6);
+
+        /* Modern animated background palette (Dark) */
+        --bg-grad-1: #0F1923;
+        --bg-grad-2: #162B3A;
+        --bg-grad-3: #1B2436;
+        --bg-grad-4: #12282B;
       }
     }
 
     :root[data-theme="dark"] {
       --sand: #14202A;
-      --card: #1C2B36;
+      --card: rgba(28, 43, 54, 0.9);
+      --card-solid: #1C2B36;
       --ink: #F2F5F7;
       --muted: #A9B8C2;
-      --card-border: rgba(255, 255, 255, 0.1);
-      --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.3);
-      --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
-      --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.5);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.35);
+      --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.45);
+      --shadow-lg: 0 14px 34px rgba(0, 0, 0, 0.6);
+      --bg-grad-1: #0F1923;
+      --bg-grad-2: #162B3A;
+      --bg-grad-3: #1B2436;
+      --bg-grad-4: #12282B;
     }
 
     /* ==========================================================================
-       2. Reset & Base Styles
+       2. Reset, Base & Modern Animated Background
        ========================================================================== */
     *, *::before, *::after {
       box-sizing: border-box;
@@ -68,9 +91,27 @@
       padding: 0;
     }
 
+    @keyframes auroraShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes orbFloatA {
+      0%, 100% { transform: translate(0px, 0px) scale(1); }
+      50%      { transform: translate(28px, -24px) scale(1.12); }
+    }
+
+    @keyframes orbFloatB {
+      0%, 100% { transform: translate(0px, 0px) scale(1); }
+      50%      { transform: translate(-24px, 30px) scale(1.08); }
+    }
+
     body {
       font-family: var(--font-main);
-      background-color: var(--sand);
+      background: linear-gradient(-45deg, var(--bg-grad-1), var(--bg-grad-2), var(--bg-grad-3), var(--bg-grad-4));
+      background-size: 350% 350%;
+      animation: auroraShift 18s ease infinite;
       color: var(--ink);
       line-height: 1.5;
       font-size: 16px;
@@ -83,7 +124,6 @@
       overflow-x: hidden;
     }
 
-    /* Mobile wrapper (360px-440px feel, perfectly centered on desktop) */
     #app-container {
       width: 100%;
       max-width: 440px;
@@ -91,18 +131,49 @@
       display: flex;
       flex-direction: column;
       position: relative;
-      background-color: var(--sand);
-      box-shadow: 0 0 30px rgba(0, 0, 0, 0.05);
-      padding-bottom: 84px; /* Space for bottom nav */
+      background: transparent;
+      padding-bottom: 88px;
+      overflow: hidden;
     }
 
-    /* Visible focus styles for accessibility */
+    /* Soft floating ambient orbs behind content */
+    .ambient-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(55px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.45;
+    }
+    .ambient-orb-1 {
+      width: 220px;
+      height: 220px;
+      background: var(--sun);
+      top: -50px;
+      right: -40px;
+      opacity: 0.18;
+      animation: orbFloatA 12s ease-in-out infinite;
+    }
+    .ambient-orb-2 {
+      width: 240px;
+      height: 240px;
+      background: var(--sea);
+      bottom: 60px;
+      left: -60px;
+      opacity: 0.14;
+      animation: orbFloatB 15s ease-in-out infinite;
+    }
+
+    #app-container > *:not(.ambient-orb) {
+      position: relative;
+      z-index: 1;
+    }
+
     :focus-visible {
       outline: 3px solid var(--sun);
       outline-offset: 2px;
     }
 
-    /* Skip link */
     .skip-link {
       position: absolute;
       top: -40px;
@@ -116,11 +187,8 @@
       text-decoration: none;
       font-weight: 700;
     }
-    .skip-link:focus {
-      top: 16px;
-    }
+    .skip-link:focus { top: 16px; }
 
-    /* Screen Reader Only */
     .sr-only {
       position: absolute;
       width: 1px;
@@ -143,16 +211,15 @@
     .text-muted { color: var(--muted); font-size: 14px; }
     .text-sm { font-size: 14px; }
 
-    /* Buttons */
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
       min-height: 48px;
-      padding: 12px 20px;
+      padding: 12px 18px;
       font-family: inherit;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
       border-radius: var(--radius-md);
       border: 2px solid transparent;
@@ -162,62 +229,26 @@
       transition: transform var(--transition), background-color var(--transition), opacity var(--transition);
       touch-action: manipulation;
     }
-    .btn:active {
-      transform: scale(0.97);
-    }
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-    .btn-primary {
-      background-color: var(--sea);
-      color: #FFFFFF;
-    }
-    .btn-primary:hover:not(:disabled) {
-      filter: brightness(1.08);
-    }
+    .btn-primary { background-color: var(--sea); color: #FFFFFF; }
+    .btn-primary:hover:not(:disabled) { filter: brightness(1.08); }
 
-    .btn-secondary {
-      background-color: rgba(31, 111, 139, 0.12);
-      color: var(--sea);
-    }
-    .btn-secondary:hover:not(:disabled) {
-      background-color: rgba(31, 111, 139, 0.2);
-    }
+    .btn-secondary { background-color: rgba(31, 111, 139, 0.12); color: var(--sea); }
+    .btn-secondary:hover:not(:disabled) { background-color: rgba(31, 111, 139, 0.2); }
 
-    .btn-outline {
-      background-color: transparent;
-      border-color: var(--sea);
-      color: var(--sea);
-    }
+    .btn-outline { background-color: transparent; border-color: var(--sea); color: var(--sea); }
+    .btn-danger { background-color: transparent; border-color: var(--coral); color: var(--coral); }
+    .btn-success { background-color: var(--olive); color: #FFFFFF; }
+    .btn-sun { background-color: var(--sun); color: #1E2A32; }
+    .btn-block { width: 100%; }
+    .btn-pill { border-radius: var(--radius-full); padding: 6px 14px; min-height: 40px; font-size: 13px; }
 
-    .btn-danger {
-      background-color: transparent;
-      border-color: var(--coral);
-      color: var(--coral);
-    }
-
-    .btn-success {
-      background-color: var(--olive);
-      color: #FFFFFF;
-    }
-
-    .btn-block {
-      width: 100%;
-    }
-
-    .btn-pill {
-      border-radius: var(--radius-full);
-      padding: 6px 14px;
-      min-height: 38px;
-      font-size: 14px;
-    }
-
-    /* Cards */
     .card {
       background-color: var(--card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border-radius: var(--radius-lg);
       padding: 16px;
       border: 1px solid var(--card-border);
@@ -226,29 +257,32 @@
       transition: transform var(--transition), box-shadow var(--transition);
     }
 
-    /* Chips */
     .chip {
       display: inline-flex;
       align-items: center;
       gap: 4px;
       padding: 4px 10px;
       border-radius: var(--radius-full);
-      font-size: 13px;
-      font-weight: 700;
+      font-size: 12px;
+      font-weight: 800;
     }
     .chip-easy { background: rgba(122, 158, 59, 0.18); color: var(--olive); }
-    .chip-medium { background: rgba(246, 162, 58, 0.2); color: #B56C07; }
-    .chip-hard { background: rgba(228, 87, 46, 0.15); color: var(--coral); }
-    .chip-xp { background: rgba(246, 162, 58, 0.25); color: #B56C07; font-weight: 800; }
+    .chip-medium { background: rgba(246, 162, 58, 0.22); color: #A86003; }
+    .chip-hard { background: rgba(228, 87, 46, 0.16); color: var(--coral); }
+    .chip-adventure { background: rgba(31, 111, 139, 0.16); color: var(--sea); }
+    .chip-legend { background: linear-gradient(135deg, rgba(246, 162, 58, 0.28), rgba(228, 87, 46, 0.2)); color: #9C4200; }
+    .chip-xp { background: rgba(246, 162, 58, 0.25); color: #9C5802; font-weight: 800; }
 
     /* ==========================================================================
-       4. Persistent Header & Navigation
+       4. Persistent Header & Bottom Navigation
        ========================================================================== */
     .app-header {
       position: sticky;
       top: 0;
       z-index: 90;
       background: var(--card);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--card-border);
       padding: 10px 16px;
       display: flex;
@@ -274,35 +308,20 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
     }
 
-    .header-info {
-      display: flex;
-      flex-direction: column;
-    }
-    .header-name {
-      font-size: 14px;
-      font-weight: 800;
-      color: var(--ink);
-      line-height: 1.1;
-    }
-    .header-level {
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: 600;
-    }
+    .header-info { display: flex; flex-direction: column; }
+    .header-name { font-size: 14px; font-weight: 800; color: var(--ink); line-height: 1.1; }
+    .header-level { font-size: 12px; color: var(--muted); font-weight: 600; }
 
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .header-right { display: flex; align-items: center; gap: 8px; }
 
     .xp-badge {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      background: rgba(246, 162, 58, 0.2);
+      background: rgba(246, 162, 58, 0.22);
       border: 1px solid var(--sun);
       color: #9C5802;
       padding: 4px 10px;
@@ -322,14 +341,10 @@
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
       min-height: 36px;
     }
-    .btn-help-header:hover {
-      background: rgba(228, 87, 46, 0.2);
-    }
 
-    /* Bottom Navigation Bar (Thumb reachable, 64px) */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -339,13 +354,15 @@
       max-width: 440px;
       height: 68px;
       background-color: var(--card);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border-top: 1px solid var(--card-border);
       display: flex;
       align-items: center;
       justify-content: space-around;
       z-index: 100;
-      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.05);
-      padding: 0 8px;
+      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+      padding: 0 6px;
     }
 
     .nav-item {
@@ -374,35 +391,23 @@
       stroke-width: 2.2;
       stroke: currentColor;
       fill: none;
-      transition: stroke var(--transition), transform var(--transition);
     }
-    .nav-item.active {
-      color: var(--sea);
-    }
-    .nav-item.active svg {
-      stroke: var(--sea);
-      transform: translateY(-2px);
-    }
-    .nav-item:active {
-      transform: scale(0.95);
-    }
+    .nav-item.active { color: var(--sea); }
+    .nav-item.active svg { stroke: var(--sea); transform: translateY(-2px); }
 
-    /* Screen views */
     .screen {
       display: none;
       padding: 16px;
-      animation: fadeIn 200ms ease;
+      animation: fadeIn 220ms ease;
     }
-    .screen.active {
-      display: block;
-    }
+    .screen.active { display: block; }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
     /* ==========================================================================
-       5. Screen 1: Welcome & Onboarding
+       5. Screen 1 & 2: Welcome & Avatar Creator
        ========================================================================== */
     .welcome-container {
       display: flex;
@@ -410,37 +415,14 @@
       align-items: center;
       text-align: center;
       padding: 24px 8px;
-      min-height: calc(100vh - 120px);
+      min-height: calc(100vh - 100px);
       justify-content: center;
     }
-    .welcome-art {
-      width: 100%;
-      max-width: 280px;
-      margin-bottom: 24px;
-    }
-    .welcome-title {
-      font-size: 32px;
-      font-weight: 900;
-      color: var(--sea);
-      margin-bottom: 8px;
-      letter-spacing: -0.5px;
-    }
-    .welcome-intro {
-      font-size: 17px;
-      color: var(--ink);
-      margin-bottom: 24px;
-      max-width: 320px;
-      line-height: 1.4;
-    }
-    .welcome-note {
-      font-size: 14px;
-      color: var(--muted);
-      margin-top: 16px;
-    }
+    .welcome-art { width: 100%; max-width: 280px; margin-bottom: 24px; }
+    .welcome-title { font-size: 32px; font-weight: 900; color: var(--sea); margin-bottom: 8px; }
+    .welcome-intro { font-size: 17px; color: var(--ink); margin-bottom: 24px; max-width: 320px; }
+    .welcome-note { font-size: 14px; color: var(--muted); margin-top: 16px; }
 
-    /* ==========================================================================
-       6. Screen 2: Avatar Creator
-       ========================================================================== */
     .creator-preview-card {
       background: var(--card);
       border-radius: var(--radius-lg);
@@ -463,18 +445,15 @@
       align-items: center;
       justify-content: center;
       margin-bottom: 12px;
-      box-shadow: var(--shadow-sm);
     }
     .creator-section-title {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 800;
       color: var(--sea);
       margin: 16px 0 8px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-
-    /* Selector carousels / grids */
     .selector-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -496,7 +475,7 @@
     }
     .selector-btn.active {
       border-color: var(--sea);
-      background: rgba(31, 111, 139, 0.08);
+      background: rgba(31, 111, 139, 0.1);
       transform: scale(1.04);
     }
     .color-swatch {
@@ -507,18 +486,8 @@
       box-shadow: 0 0 0 1px rgba(0,0,0,0.15);
     }
 
-    .form-group {
-      margin-bottom: 20px;
-      text-align: left;
-      width: 100%;
-    }
-    .form-label {
-      display: block;
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: var(--ink);
-    }
+    .form-group { margin-bottom: 16px; text-align: left; width: 100%; }
+    .form-label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 6px; color: var(--ink); }
     .form-input {
       width: 100%;
       min-height: 48px;
@@ -527,125 +496,157 @@
       font-family: inherit;
       border-radius: var(--radius-md);
       border: 2px solid var(--card-border);
-      background: var(--card);
+      background: var(--card-solid);
       color: var(--ink);
     }
-    .form-input:focus {
-      border-color: var(--sea);
-      outline: none;
-    }
+    .form-input:focus { border-color: var(--sea); outline: none; }
 
     /* ==========================================================================
-       7. Screen 3: Map (Home)
+       6. Map (SVG Zones + Interactive Leaflet Map)
        ========================================================================== */
-    .map-header-bar {
+    .tab-pills {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
+      gap: 8px;
+      margin-bottom: 16px;
     }
+    .tab-pill {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--card-border);
+      background: var(--card);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all var(--transition);
+    }
+    .tab-pill.active {
+      background: var(--sea);
+      color: #FFFFFF;
+      border-color: var(--sea);
+      box-shadow: var(--shadow-sm);
+    }
+
     .map-card {
       background: var(--card);
       border-radius: var(--radius-lg);
       padding: 12px;
       border: 1px solid var(--card-border);
       box-shadow: var(--shadow-sm);
-      position: relative;
-      overflow: hidden;
     }
     .map-svg-wrap {
       width: 100%;
       border-radius: var(--radius-md);
       background: #FDF7EE;
       border: 1px solid rgba(0,0,0,0.05);
-      position: relative;
+      overflow: hidden;
     }
     :root[data-theme="dark"] .map-svg-wrap,
     @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) .map-svg-wrap {
-        background: #192732;
-      }
-    }
-    .map-zones-list {
-      margin-top: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .zone-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 14px;
-      border-radius: var(--radius-md);
-      background: var(--sand);
-      border: 1px solid var(--card-border);
-    }
-    .zone-item.unlocked {
-      border-left: 5px solid var(--olive);
-    }
-    .zone-item.locked {
-      opacity: 0.65;
-      border-left: 5px solid var(--muted);
-    }
-    .zone-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .zone-icon {
-      font-size: 20px;
+      :root:not([data-theme="light"]) .map-svg-wrap { background: #192732; }
     }
 
-    /* Quick jump to treasures banner */
+    .zone-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 14px;
+      border-radius: var(--radius-md);
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 10px;
+    }
+    .zone-item.unlocked { border-left: 5px solid var(--olive); }
+    .zone-item.locked { opacity: 0.68; border-left: 5px solid var(--muted); }
+    .zone-top { display: flex; align-items: center; justify-content: space-between; }
+    .zone-info { display: flex; align-items: center; gap: 10px; }
+    .zone-icon { font-size: 22px; }
+    .zone-stars { font-size: 13px; color: var(--sun); font-weight: 800; }
+    .zone-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: rgba(0, 0, 0, 0.08);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+    .zone-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--olive), var(--sun));
+      transition: width var(--transition);
+    }
+
     .map-treasure-banner {
-      background: linear-gradient(135deg, rgba(246, 162, 58, 0.15), rgba(31, 111, 139, 0.12));
+      background: linear-gradient(135deg, rgba(246, 162, 58, 0.18), rgba(31, 111, 139, 0.14));
       border: 1px solid var(--sun);
       border-radius: var(--radius-lg);
       padding: 14px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-top: 14px;
+      margin: 14px 0;
       cursor: pointer;
+    }
+
+    /* Real Leaflet Map Styles */
+    #leaflet-map {
+      width: 100%;
+      height: 330px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--card-border);
+      z-index: 1;
+      background: #E8F0F2;
+    }
+    .area-chips-scroll {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 8px 0 12px;
+      scrollbar-width: none;
+    }
+    .area-chips-scroll::-webkit-scrollbar { display: none; }
+    .area-chip {
+      flex-shrink: 0;
+      padding: 6px 12px;
+      border-radius: var(--radius-full);
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--sea);
+      cursor: pointer;
+      min-height: 36px;
+    }
+    .pin-card {
+      background: var(--card);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .pin-photo-thumb {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--card-border);
     }
 
     /* ==========================================================================
-       8. Screen 4: Challenges & Reflection Cards
+       7. Challenges, Social Multiplier & Reflection Cards
        ========================================================================== */
-    .tab-pills {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-      border-bottom: 1px solid var(--card-border);
-      padding-bottom: 10px;
-    }
-    .tab-pill {
-      flex: 1;
-      padding: 8px 12px;
-      border-radius: var(--radius-full);
-      border: 1px solid var(--card-border);
-      background: var(--card);
-      color: var(--muted);
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      text-align: center;
-      min-height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-    .tab-pill.active {
-      background: var(--sea);
-      color: #FFFFFF;
-      border-color: var(--sea);
-    }
-
-    .level-group {
-      margin-bottom: 20px;
-    }
+    .level-group { margin-bottom: 20px; }
     .level-group-header {
       display: flex;
       align-items: center;
@@ -661,24 +662,57 @@
       border: 1px solid var(--card-border);
       box-shadow: var(--shadow-sm);
       margin-bottom: 12px;
-      position: relative;
     }
-    .challenge-card.completed {
-      border-left: 5px solid var(--olive);
+    .challenge-card.completed { border-left: 5px solid var(--olive); }
+    .challenge-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .challenge-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+    /* Social selector pills inside modal */
+    .social-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 8px 0 14px;
     }
-    .challenge-top {
+    .social-grid-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .social-btn {
+      min-height: 48px;
+      padding: 8px 6px;
+      border-radius: var(--radius-md);
+      border: 2px solid var(--card-border);
+      background: var(--card-solid);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 8px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      text-align: center;
+      transition: all var(--transition);
     }
-    .challenge-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 14px;
+    .social-btn.active {
+      border-color: var(--sea);
+      background: rgba(31, 111, 139, 0.12);
+      color: var(--sea);
     }
 
-    /* Reflection cards list */
+    .xp-preview-banner {
+      background: linear-gradient(135deg, rgba(246, 162, 58, 0.2), rgba(122, 158, 59, 0.15));
+      border: 1px solid var(--sun);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      text-align: center;
+      font-weight: 800;
+      font-size: 14px;
+      color: var(--ink);
+      margin: 10px 0 14px;
+    }
+
     .card-item {
       background: var(--card);
       border-radius: var(--radius-lg);
@@ -687,26 +721,28 @@
       box-shadow: var(--shadow-sm);
       margin-bottom: 12px;
     }
-    .card-item.completed {
-      border-left: 5px solid var(--olive);
-    }
+    .card-item.completed { border-left: 5px solid var(--olive); }
 
     /* ==========================================================================
-       9. Screen 5: Quiz
+       8. Quiz (Mindset Progress Test & Comparison)
        ========================================================================== */
+    .mindset-compare-box {
+      background: var(--card);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      border: 1px solid var(--sun);
+      margin-bottom: 14px;
+      box-shadow: var(--shadow-sm);
+    }
     .quiz-progress-bar {
       width: 100%;
       height: 8px;
       background: rgba(0, 0, 0, 0.08);
       border-radius: var(--radius-full);
       overflow: hidden;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
-    .quiz-progress-fill {
-      height: 100%;
-      background: var(--sea);
-      transition: width var(--transition);
-    }
+    .quiz-progress-fill { height: 100%; background: var(--sea); transition: width var(--transition); }
     .quiz-card {
       background: var(--card);
       border-radius: var(--radius-lg);
@@ -715,17 +751,12 @@
       box-shadow: var(--shadow-sm);
       margin-bottom: 16px;
     }
-    .quiz-options {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 16px;
-    }
+    .quiz-options { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
     .quiz-opt-btn {
       width: 100%;
       min-height: 48px;
       padding: 12px 14px;
-      background: var(--sand);
+      background: var(--card-solid);
       border: 2px solid var(--card-border);
       border-radius: var(--radius-md);
       font-size: 15px;
@@ -738,41 +769,20 @@
       gap: 10px;
       transition: all var(--transition);
     }
-    .quiz-opt-btn:hover:not(:disabled) {
-      border-color: var(--sea);
-      background: rgba(31, 111, 139, 0.08);
-    }
-    .quiz-opt-btn.correct {
-      background: rgba(122, 158, 59, 0.2);
-      border-color: var(--olive);
-      color: var(--olive);
-    }
-    .quiz-opt-btn.wrong {
-      background: rgba(228, 87, 46, 0.15);
-      border-color: var(--coral);
-      color: var(--coral);
-    }
+    .quiz-opt-btn.correct { background: rgba(122, 158, 59, 0.2); border-color: var(--olive); color: var(--olive); }
+    .quiz-opt-btn.wrong { background: rgba(228, 87, 46, 0.14); border-color: var(--coral); color: var(--coral); }
     .quiz-feedback {
       margin-top: 16px;
       padding: 14px;
       border-radius: var(--radius-md);
       font-size: 15px;
       line-height: 1.4;
-      animation: fadeIn 200ms ease;
-    }
-    .quiz-feedback.success {
-      background: rgba(122, 158, 59, 0.15);
-      border: 1px solid var(--olive);
-      color: var(--ink);
-    }
-    .quiz-feedback.info {
-      background: rgba(31, 111, 139, 0.12);
+      background: rgba(31, 111, 139, 0.1);
       border: 1px solid var(--sea);
-      color: var(--ink);
     }
 
     /* ==========================================================================
-       10. Screen 6: Hidden Treasures
+       9. Treasures & Profile
        ========================================================================== */
     .treasure-card {
       background: var(--card);
@@ -781,12 +791,8 @@
       border: 1px solid var(--card-border);
       box-shadow: var(--shadow-sm);
       margin-bottom: 12px;
-      position: relative;
     }
-    .treasure-card.found {
-      border-left: 5px solid var(--sun);
-      background: linear-gradient(to right, rgba(246, 162, 58, 0.05), var(--card));
-    }
+    .treasure-card.found { border-left: 5px solid var(--sun); }
     .treasure-reward-box {
       background: rgba(246, 162, 58, 0.12);
       border-radius: var(--radius-md);
@@ -794,12 +800,8 @@
       border-left: 3px solid var(--sun);
       margin-top: 12px;
       font-size: 14px;
-      line-height: 1.4;
     }
 
-    /* ==========================================================================
-       11. Screen 7: Profile
-       ========================================================================== */
     .profile-hero {
       background: var(--card);
       border-radius: var(--radius-lg);
@@ -834,14 +836,9 @@
       border-radius: var(--radius-full);
       transition: width var(--transition);
     }
-    .badges-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin-top: 12px;
-    }
+    .badges-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px; }
     .badge-card {
-      background: var(--sand);
+      background: var(--card);
       border: 1px solid var(--card-border);
       border-radius: var(--radius-md);
       padding: 12px;
@@ -849,19 +846,11 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
     }
-    .badge-card.unlocked {
-      border-color: var(--sun);
-      background: rgba(246, 162, 58, 0.1);
-    }
-    .badge-card.locked {
-      opacity: 0.5;
-      filter: grayscale(1);
-    }
-    .badge-icon {
-      font-size: 28px;
-    }
+    .badge-card.unlocked { border-color: var(--sun); background: rgba(246, 162, 58, 0.12); }
+    .badge-card.locked { opacity: 0.5; filter: grayscale(1); }
+    .badge-icon { font-size: 28px; }
     .history-item {
       display: flex;
       justify-content: space-between;
@@ -872,7 +861,7 @@
     }
 
     /* ==========================================================================
-       12. Modals & Bottom Sheets
+       10. Modals, Bottom Sheets, Celebration & Fireworks
        ========================================================================== */
     .modal-overlay {
       position: fixed;
@@ -881,22 +870,19 @@
       backdrop-filter: blur(4px);
       z-index: 200;
       display: none;
-      align-items: flex-end; /* Mobile bottom sheet style */
+      align-items: flex-end;
       justify-content: center;
-      animation: fadeIn 200ms ease;
     }
-    .modal-overlay.active {
-      display: flex;
-    }
+    .modal-overlay.active { display: flex; }
 
     .bottom-sheet {
-      background: var(--card);
+      background: var(--card-solid);
       width: 100%;
       max-width: 440px;
-      border-radius: 20px 20px 0 0;
+      border-radius: 22px 22px 0 0;
       padding: 20px 20px 32px;
-      box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.2);
-      max-height: 85vh;
+      box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.25);
+      max-height: 88vh;
       overflow-y: auto;
       animation: slideUp 250ms ease-out;
     }
@@ -910,34 +896,34 @@
       height: 5px;
       background: var(--card-border);
       border-radius: var(--radius-full);
-      margin: 0 auto 16px;
+      margin: 0 auto 14px;
     }
 
-    /* Full-screen level-up modal */
-    .levelup-modal {
+    /* Celebration Modal (XP Gain, Challenge, Level-Up, Avatar Dance + Fireworks + Quote) */
+    .celebration-modal {
       position: fixed;
       inset: 0;
-      background: rgba(14, 23, 31, 0.85);
+      background: rgba(10, 18, 26, 0.86);
+      backdrop-filter: blur(6px);
       z-index: 300;
       display: none;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      padding: 20px;
       text-align: center;
-      color: #FFFFFF;
     }
-    .levelup-modal.active {
-      display: flex;
-    }
-    .levelup-content {
-      background: var(--card);
+    .celebration-modal.active { display: flex; }
+    .celebration-card {
+      background: var(--card-solid);
       color: var(--ink);
       border-radius: var(--radius-lg);
-      padding: 28px 24px;
-      max-width: 360px;
+      padding: 24px 20px;
+      max-width: 370px;
       width: 100%;
       box-shadow: var(--shadow-lg);
+      position: relative;
+      z-index: 320;
       animation: scalePop 300ms ease-out;
     }
     @keyframes scalePop {
@@ -945,8 +931,69 @@
       to { transform: scale(1); opacity: 1; }
     }
 
-    /* Confetti Canvas */
-    #confetti-canvas {
+    /* Funny Avatar Celebration Animations */
+    .celebration-avatar-stage {
+      width: 112px;
+      height: 112px;
+      margin: 0 auto 10px;
+      border-radius: 50%;
+      background: var(--sand);
+      border: 3px solid var(--sun);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    @keyframes avatarJumpSpin {
+      0%   { transform: translateY(0) rotate(0deg) scale(1); }
+      25%  { transform: translateY(-22px) rotate(-10deg) scale(1.1); }
+      50%  { transform: translateY(-28px) rotate(360deg) scale(1.12); }
+      75%  { transform: translateY(-10px) rotate(370deg) scale(1.05); }
+      100% { transform: translateY(0) rotate(360deg) scale(1); }
+    }
+    @keyframes avatarWiggleDance {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      15% { transform: rotate(-14deg) translateY(-10px) scale(1.08); }
+      30% { transform: rotate(14deg) translateY(-14px) scale(1.08); }
+      45% { transform: rotate(-12deg) translateY(-8px) scale(1.06); }
+      60% { transform: rotate(12deg) translateY(-12px) scale(1.08); }
+      75% { transform: rotate(-6deg) translateY(-4px) scale(1.03); }
+    }
+    @keyframes avatarSuperBounce {
+      0%, 100% { transform: translateY(0) scale(1, 1); }
+      20% { transform: translateY(4px) scale(1.12, 0.88); }
+      45% { transform: translateY(-26px) scale(0.94, 1.08); }
+      70% { transform: translateY(0) scale(1.08, 0.92); }
+      85% { transform: translateY(-10px) scale(0.98, 1.03); }
+    }
+    .anim-jump-spin { animation: avatarJumpSpin 1.1s ease-in-out 2; }
+    .anim-dance     { animation: avatarWiggleDance 1s ease-in-out 2; }
+    .anim-bounce    { animation: avatarSuperBounce 0.9s ease-in-out 2; }
+
+    .quote-box {
+      background: linear-gradient(135deg, rgba(31, 111, 139, 0.08), rgba(246, 162, 58, 0.14));
+      border-left: 4px solid var(--sun);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      margin: 14px 0;
+      text-align: left;
+    }
+    .quote-text {
+      font-size: 14px;
+      font-weight: 700;
+      font-style: italic;
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    .quote-author {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--sea);
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    #fireworks-canvas {
       position: fixed;
       inset: 0;
       width: 100vw;
@@ -956,34 +1003,19 @@
       display: none;
     }
 
-    /* Comfort rating slider & number chips */
-    .rating-row {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 6px;
-      margin: 14px 0;
-    }
+    .rating-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 12px 0; }
     .rating-btn {
       min-height: 44px;
       border: 2px solid var(--card-border);
-      background: var(--sand);
+      background: var(--card-solid);
       border-radius: var(--radius-md);
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 800;
       cursor: pointer;
       color: var(--ink);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all var(--transition);
     }
-    .rating-btn.active {
-      border-color: var(--sea);
-      background: var(--sea);
-      color: #FFFFFF;
-    }
+    .rating-btn.active { border-color: var(--sea); background: var(--sea); color: #FFFFFF; }
 
-    /* Emergency buttons in Help Sheet */
     .emergency-box {
       background: rgba(228, 87, 46, 0.1);
       border: 1px solid rgba(228, 87, 46, 0.3);
@@ -991,24 +1023,25 @@
       padding: 16px;
       margin: 16px 0;
     }
-    .emergency-btn-row {
-      display: flex;
-      gap: 10px;
-      margin-top: 14px;
-    }
+    .emergency-btn-row { display: flex; gap: 10px; margin-top: 12px; }
 
-    /* SVG Map Pins & Animations */
-    .map-pin {
-      cursor: pointer;
-      transition: transform 200ms ease;
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      top: 72px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--ink);
+      color: #FFFFFF;
+      padding: 10px 18px;
+      border-radius: var(--radius-full);
+      font-size: 14px;
+      font-weight: 700;
+      z-index: 500;
+      box-shadow: var(--shadow-md);
+      display: none;
     }
-    .map-pin:hover {
-      transform: scale(1.1);
-    }
-    .map-pin.locked {
-      opacity: 0.6;
-      cursor: default;
-    }
+    .toast.active { display: block; animation: fadeIn 200ms ease; }
 
     /* Respect reduced motion */
     @media (prefers-reduced-motion: reduce) {
@@ -1017,25 +1050,27 @@
         animation-iteration-count: 1 !important;
         transition-duration: 0.001ms !important;
       }
-      #confetti-canvas {
-        display: none !important;
-      }
+      body { animation: none !important; }
+      #fireworks-canvas { display: none !important; }
     }
   </style>
 </head>
 <body>
   <a href="#main-content" class="skip-link">Μετάβαση στο περιεχόμενο</a>
 
-  <!-- Confetti Canvas -->
-  <canvas id="confetti-canvas"></canvas>
+  <!-- Fireworks Canvas (3-5 seconds) -->
+  <canvas id="fireworks-canvas"></canvas>
 
-  <!-- Live Announcer for screen readers -->
+  <!-- Toast & Screen Reader Announcer -->
+  <div id="toast" class="toast" role="status"></div>
   <div id="a11y-announcer" class="sr-only" aria-live="polite"></div>
 
-  <!-- App Wrapper -->
   <div id="app-container">
-    
-    <!-- Top Header (Hidden on Welcome Screen) -->
+    <!-- Subtle floating ambient orbs -->
+    <div class="ambient-orb ambient-orb-1" aria-hidden="true"></div>
+    <div class="ambient-orb ambient-orb-2" aria-hidden="true"></div>
+
+    <!-- Top Header -->
     <header id="app-header" class="app-header" style="display: none;">
       <div class="header-left" id="header-profile-btn" role="button" tabindex="0" aria-label="Μετάβαση στο Προφίλ">
         <div class="header-avatar-circle" id="header-avatar-icon"></div>
@@ -1055,41 +1090,32 @@
       </div>
     </header>
 
-    <!-- Main Content Area -->
+    <!-- Main Content -->
     <main id="main-content">
-      
+
       <!-- Screen 1: Welcome -->
       <section id="screen-welcome" class="screen active" aria-labelledby="welcome-heading">
         <div class="welcome-container">
           <div class="welcome-art">
-            <!-- Inline SVG Art for Athens Welcome -->
             <svg viewBox="0 0 280 200" width="100%" height="auto" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <!-- Sun / Sky glow -->
               <circle cx="140" cy="110" r="75" fill="#FFF0D6" />
               <circle cx="140" cy="110" r="50" fill="#FDE1B2" opacity="0.6"/>
-              <!-- Stylized Acropolis silhouette -->
               <path d="M40 160 L60 135 L120 135 L140 142 L220 142 L245 160 Z" fill="#E8D4B7"/>
-              <!-- Parthenon pillars -->
-              <rect x="80" y="118" width="6" height="17" rx="2" fill="#7A9E3B" opacity="0.9"/>
-              <rect x="92" y="118" width="6" height="17" rx="2" fill="#7A9E3B" opacity="0.9"/>
-              <rect x="104" y="118" width="6" height="17" rx="2" fill="#7A9E3B" opacity="0.9"/>
-              <rect x="116" y="118" width="6" height="17" rx="2" fill="#7A9E3B" opacity="0.9"/>
-              <rect x="128" y="118" width="6" height="17" rx="2" fill="#7A9E3B" opacity="0.9"/>
+              <rect x="80" y="118" width="6" height="17" rx="2" fill="#7A9E3B"/>
+              <rect x="92" y="118" width="6" height="17" rx="2" fill="#7A9E3B"/>
+              <rect x="104" y="118" width="6" height="17" rx="2" fill="#7A9E3B"/>
+              <rect x="116" y="118" width="6" height="17" rx="2" fill="#7A9E3B"/>
+              <rect x="128" y="118" width="6" height="17" rx="2" fill="#7A9E3B"/>
               <path d="M76 117 L138 117 L107 106 Z" fill="#1F6F8B"/>
-              <!-- Coffee & Warmth -->
               <circle cx="195" cy="148" r="14" fill="#F6A23A"/>
               <path d="M190 142 Q195 136 195 130" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
               <path d="M196 142 Q201 136 201 130" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
-              <!-- Stylized leafy branch -->
-              <path d="M45 170 Q70 155 100 165" stroke="#7A9E3B" stroke-width="3" stroke-linecap="round"/>
-              <circle cx="65" cy="158" r="4" fill="#7A9E3B"/>
-              <circle cx="85" cy="160" r="4" fill="#7A9E3B"/>
             </svg>
           </div>
           <h1 id="welcome-heading" class="welcome-title">Αθήνα Quest</h1>
-          <p class="welcome-intro">Η πόλη σου, με τον δικό σου ρυθμό. Μικρά βήματα, νέες γωνιές, μηδέν πίεση.</p>
+          <p class="welcome-intro">Η πόλη σου, με τον δικό σου ρυθμό. Μικρά βήματα, νέες παρέες, αναμνήσεις στον χάρτη.</p>
           <button type="button" class="btn btn-primary btn-block" id="btn-start-welcome">Ξεκίνα</button>
-          <p class="welcome-note">Όλες οι απαντήσεις μένουν αποκλειστικά στο κινητό σου.</p>
+          <p class="welcome-note">Όλες οι απαντήσεις και οι φωτογραφίες μένουν αποκλειστικά στο κινητό σου.</p>
         </div>
       </section>
 
@@ -1098,28 +1124,23 @@
         <h2 id="avatar-heading" style="margin-bottom: 6px;">Φτιάξε την Εξερευνήτριά σου</h2>
         <p class="text-muted" style="margin-bottom: 16px;">Διάλεξε τον χαρακτήρα και το στυλ που σου ταιριάζει.</p>
 
-        <!-- Live Preview -->
         <div class="creator-preview-card">
           <div class="preview-avatar-box" id="avatar-preview-box"></div>
           <div class="header-name" id="preview-nickname-label" style="font-size: 18px;">Εξερευνήτρια</div>
           <span class="text-muted" style="font-size: 13px;">Έτοιμη για εξερεύνηση!</span>
         </div>
 
-        <!-- Nickname Input -->
         <div class="form-group">
           <label for="input-nickname" class="form-label">Όνομα ή ψευδώνυμο (προαιρετικό)</label>
           <input type="text" id="input-nickname" class="form-input" maxlength="20" placeholder="π.χ. Εξερευνήτρια, Θεοδώρα...">
         </div>
 
-        <!-- 8 Characters -->
         <div class="creator-section-title">1. Χαρακτήρας (8 επιλογές)</div>
         <div class="selector-grid" id="avatar-base-grid"></div>
 
-        <!-- 4 Hair Colors -->
         <div class="creator-section-title">2. Χρώμα μαλλιών</div>
         <div class="selector-grid" id="avatar-hair-grid"></div>
 
-        <!-- Accessories -->
         <div class="creator-section-title">3. Αξεσουάρ</div>
         <div class="selector-grid" id="avatar-accessory-grid"></div>
 
@@ -1128,75 +1149,113 @@
         </button>
       </section>
 
-      <!-- Screen 3: Map (Home) -->
+      <!-- Screen 3: Map (SVG Zones + Real Interactive Map with Photos) -->
       <section id="screen-map" class="screen" aria-labelledby="map-heading">
-        <div class="map-header-bar">
-          <div>
-            <h2 id="map-heading">Ο Χάρτης σου</h2>
-            <p class="text-muted">Ανακάλυψε τις ζώνες της πόλης καθώς ανεβαίνεις επίπεδο.</p>
-          </div>
+        <div style="margin-bottom: 12px;">
+          <h2 id="map-heading">Ο Χάρτης της Αθήνας</h2>
+          <p class="text-muted">Ανέβασε επίπεδα ζωνών και αποθήκευσε τα δικά σου μέρη με φωτογραφίες.</p>
         </div>
 
-        <div class="map-card">
-          <div class="map-svg-wrap" id="map-interactive-container">
-            <!-- SVG rendered dynamically -->
-          </div>
+        <div class="tab-pills" role="tablist">
+          <button type="button" class="tab-pill active" id="map-tab-zones" role="tab" aria-selected="true">
+            🗺️ Ζώνες Πόλης
+          </button>
+          <button type="button" class="tab-pill" id="map-tab-real" role="tab" aria-selected="false">
+            📍 Η Αθήνα μου (Φωτό)
+          </button>
         </div>
 
-        <!-- Banner for Treasures shortcut -->
-        <div class="map-treasure-banner" id="banner-treasures-shortcut" role="button" tabindex="0">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 26px;">🗝️</span>
-            <div>
-              <div style="font-weight: 800; font-size: 15px; color: var(--ink);">Κρυμμένοι Θησαυροί</div>
-              <div class="text-muted" style="font-size: 13px;">8 μυστικά σημεία περιμένουν να τα βρεις!</div>
+        <!-- Sub-view 1: Stylized SVG Zones -->
+        <div id="map-view-zones">
+          <div class="map-card">
+            <div class="map-svg-wrap" id="map-interactive-container"></div>
+          </div>
+
+          <div class="map-treasure-banner" id="banner-treasures-shortcut" role="button" tabindex="0">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 26px;">🗝️</span>
+              <div>
+                <div style="font-weight: 800; font-size: 15px;">Κρυμμένοι Θησαυροί</div>
+                <div class="text-muted" style="font-size: 13px;">8 μυστικά σημεία περιμένουν!</div>
+              </div>
             </div>
+            <span style="font-weight: 800; color: var(--sea); font-size: 18px;">➔</span>
           </div>
-          <span style="font-weight: 800; color: var(--sea); font-size: 18px;">➔</span>
+
+          <h3 style="margin: 18px 0 10px;">Επίπεδα ανά Ζώνη (Bonus με παρέα!)</h3>
+          <div id="map-zones-list-container"></div>
         </div>
 
-        <!-- Zones List -->
-        <h3 style="margin: 20px 0 10px;">Οι Ζώνες της Αθήνας</h3>
-        <div class="map-zones-list" id="map-zones-list-container"></div>
+        <!-- Sub-view 2: Real Interactive Map (Leaflet + OpenStreetMap + IndexedDB Photos) -->
+        <div id="map-view-real" style="display: none;">
+          <div class="card" style="padding: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 14px; font-weight: 800; color: var(--sea);">Πάτα στον χάρτη για νέο σημείο!</span>
+              <span class="chip chip-xp">+30 XP (+20 Φωτό)</span>
+            </div>
+
+            <!-- Quick jump neighborhoods -->
+            <div class="area-chips-scroll" id="area-jump-chips">
+              <button type="button" class="area-chip" data-lat="37.9755" data-lng="23.7258">Μοναστηράκι</button>
+              <button type="button" class="area-chip" data-lat="37.9838" data-lng="23.7275">Κέντρο</button>
+              <button type="button" class="area-chip" data-lat="37.9675" data-lng="23.7248">Κουκάκι</button>
+              <button type="button" class="area-chip" data-lat="37.9866" data-lng="23.7351">Εξάρχεια</button>
+              <button type="button" class="area-chip" data-lat="37.9918" data-lng="23.7371">Πεδίον Άρεως</button>
+              <button type="button" class="area-chip" data-lat="37.9403" data-lng="23.6914">ΚΠΙΣΝ</button>
+            </div>
+
+            <div id="leaflet-map"></div>
+            <div id="leaflet-offline-fallback" style="display: none; padding: 14px; text-align: center;">
+              <p class="text-muted">Ο διαδραστικός χάρτης χρειάζεται σύνδεση στο ίντερνετ, αλλά μπορείς να προσθέσεις σημεία και φωτογραφίες κανονικά!</p>
+            </div>
+
+            <button type="button" class="btn btn-primary btn-block" id="btn-add-pin-manual" style="margin-top: 10px;">
+              📍 Αποθήκευση Νέου Σημείου & Φωτό
+            </button>
+          </div>
+
+          <h3 style="margin: 16px 0 10px;">Τα Αποθηκευμένα Σημεία σου</h3>
+          <div id="saved-pins-list"></div>
+        </div>
       </section>
 
-      <!-- Screen 4: Challenges & Reflection Cards -->
+      <!-- Screen 4: Challenges, Explorations & Reflection Cards -->
       <section id="screen-challenges" class="screen" aria-labelledby="challenges-heading">
-        <h2 id="challenges-heading" style="margin-bottom: 4px;">Προκλήσεις & Σκέψεις</h2>
-        <p class="text-muted" style="margin-bottom: 16px;">Κάθε βήμα μετράει. Κάνε ό,τι νιώθεις σήμερα, χωρίς πίεση.</p>
+        <h2 id="challenges-heading" style="margin-bottom: 4px;">Προκλήσεις & Εξερευνήσεις</h2>
+        <p class="text-muted" style="margin-bottom: 14px;">Κάνε τις ξανά με νέα ή περισσότερα άτομα για διπλάσια & τριπλάσια XP!</p>
 
-        <!-- Tabs -->
         <div class="tab-pills" role="tablist">
           <button type="button" class="tab-pill active" id="tab-btn-challenges" role="tab" aria-selected="true">
-            🎯 Προκλήσεις
+            🎯 Δραστηριότητες
           </button>
           <button type="button" class="tab-pill" id="tab-btn-cards" role="tab" aria-selected="false">
-            💭 Κάρτες Αναστοχασμού
+            💭 Κάρτες Σκέψης
           </button>
         </div>
 
-        <!-- Challenges Tab Content -->
         <div id="tab-content-challenges">
           <div id="challenges-list-container"></div>
         </div>
 
-        <!-- Reflection Cards Tab Content -->
         <div id="tab-content-cards" style="display: none;">
           <div id="cards-list-container"></div>
         </div>
       </section>
 
-      <!-- Screen 5: Quiz -->
+      <!-- Screen 5: Quiz (Mindset Progress Test with Comparison) -->
       <section id="screen-quiz" class="screen" aria-labelledby="quiz-heading">
-        <h2 id="quiz-heading" style="margin-bottom: 4px;">Quiz Αναστοχασμού</h2>
-        <p class="text-muted" style="margin-bottom: 16px;">Σκέψεις για την προσαρμογή στη νέα σου πόλη. Χωρίς χρονόμετρο, χωρίς λάθος απαντήσεις που κοστίζουν!</p>
+        <h2 id="quiz-heading" style="margin-bottom: 4px;">Τεστ Τρόπου Σκέψης</h2>
+        <p class="text-muted" style="margin-bottom: 14px;">Δες πώς εξελίσσεται η ματιά σου για την πόλη σε σύγκριση με παλαιότερες φορές.</p>
+
+        <!-- Historical Comparison Box -->
+        <div id="quiz-history-banner" class="mindset-compare-box" style="display: none;"></div>
 
         <div class="quiz-progress-bar">
           <div class="quiz-progress-fill" id="quiz-progress-fill" style="width: 20%;"></div>
         </div>
         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-          <span class="text-muted" id="quiz-step-label">Ερώτηση 1 από 5</span>
-          <span class="chip chip-xp">+5 XP ανά σωστή</span>
+          <span class="text-muted" id="quiz-step-label">Ερώτηση 1 από 6</span>
+          <span class="chip chip-xp">+5 XP / απάντηση</span>
         </div>
 
         <div class="quiz-card" id="quiz-box">
@@ -1233,35 +1292,37 @@
             <span id="profile-next-xp-txt">Επόμενο επίπεδο στα 50 XP</span>
           </div>
 
-          <button type="button" class="btn btn-secondary btn-pill" id="profile-edit-avatar-btn" style="margin-top: 14px;">
-            ✏️ Επεξεργασία Avatar
-          </button>
+          <div style="display: flex; gap: 8px; justify-content: center; margin-top: 14px;">
+            <button type="button" class="btn btn-secondary btn-pill" id="profile-edit-avatar-btn">
+              ✏️ Αλλαγή Avatar
+            </button>
+            <button type="button" class="btn btn-sun btn-pill" id="profile-share-progress-btn">
+              📤 Μοιράσου πρόοδο
+            </button>
+          </div>
         </div>
 
-        <!-- Badges Section -->
         <h3 style="margin: 20px 0 10px;">🏆 Κονκάρδες Επιτευγμάτων</h3>
         <div class="badges-grid" id="profile-badges-container"></div>
 
-        <!-- Completed History -->
         <h3 style="margin: 24px 0 10px;">📜 Ιστορικό Ενεργειών</h3>
         <div class="card" id="profile-history-card">
           <div id="profile-history-list"></div>
         </div>
 
-        <!-- Reset Button -->
         <div style="margin-top: 24px; text-align: center;">
           <button type="button" class="btn btn-danger btn-block" id="btn-open-reset">
             Επαναφορά προόδου
           </button>
           <span class="text-muted" style="display: block; margin-top: 8px; font-size: 13px;">
-            Μηδενίζει όλα τα δεδομένα τοπικά στο κινητό.
+            Μηδενίζει όλα τα δεδομένα και τις φωτογραφίες τοπικά στο κινητό.
           </span>
         </div>
       </section>
 
     </main>
 
-    <!-- Bottom Navigation Bar -->
+    <!-- Bottom Navigation -->
     <nav id="bottom-nav" class="bottom-nav" aria-label="Κύρια πλοήγηση" style="display: none;">
       <button type="button" class="nav-item active" data-screen="screen-map" aria-label="Χάρτης">
         <svg viewBox="0 0 24 24"><path d="M1 6v15l7-4 8 4 7-4V2l-7 4-8-4-7 4zM8 2v15M16 6v15"/></svg>
@@ -1271,9 +1332,9 @@
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
         <span>Προκλήσεις</span>
       </button>
-      <button type="button" class="nav-item" data-screen="screen-quiz" aria-label="Quiz">
+      <button type="button" class="nav-item" data-screen="screen-quiz" aria-label="Τεστ Σκέψης">
         <svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg>
-        <span>Quiz</span>
+        <span>Τεστ</span>
       </button>
       <button type="button" class="nav-item" data-screen="screen-profile" aria-label="Προφίλ">
         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -1285,7 +1346,7 @@
          MODALS & SHEETS
          ========================================================================== -->
 
-    <!-- 1. Help Bottom Sheet (Always available) -->
+    <!-- 1. Help Bottom Sheet -->
     <div id="modal-help" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="help-sheet-title">
       <div class="bottom-sheet">
         <div class="sheet-handle"></div>
@@ -1295,8 +1356,7 @@
           </h2>
           <button type="button" class="btn btn-secondary btn-pill" id="btn-close-help" aria-label="Κλείσιμο βοήθειας">✕</button>
         </div>
-        
-        <!-- Exact Greek text mandated by prompt -->
+
         <p style="font-size: 16px; line-height: 1.5; margin-bottom: 16px;">
           Αν νιώθεις ότι δεν τα καταφέρνεις ή σκέφτεσαι να βλάψεις τον εαυτό σου, μίλησε τώρα σε κάποιον. Γραμμή 1018 (24ωρη). Σε άμεσο κίνδυνο κάλεσε το 112. Η υπηρεσία φοιτητών του Τμήματός σου μπορεί επίσης να βοηθήσει.
         </p>
@@ -1306,110 +1366,129 @@
             📞 Άμεση Τηλεφωνική Επικοινωνία:
           </div>
           <div class="emergency-btn-row">
-            <a href="tel:1018" class="btn btn-primary" style="background-color: var(--coral); flex: 1;">
-              Γραμμή 1018
-            </a>
-            <a href="tel:112" class="btn btn-secondary" style="flex: 1;">
-              Κλήση στο 112
-            </a>
+            <a href="tel:1018" class="btn btn-primary" style="background-color: var(--coral); flex: 1;">Γραμμή 1018</a>
+            <a href="tel:112" class="btn btn-secondary" style="flex: 1;">Κλήση στο 112</a>
           </div>
         </div>
-
-        <p class="text-muted" style="font-size: 13px; text-align: center; margin-top: 12px;">
-          Δεν είσαι μόνη. Κάθε αρχή σε μια νέα πόλη χρειάζεται χρόνο και υποστήριξη.
-        </p>
       </div>
     </div>
 
-    <!-- 2. Challenge Detail & Comfort Rating Sheet -->
+    <!-- 2. Challenge Detail, Social Multiplier & Comfort Rating Sheet -->
     <div id="modal-challenge" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="challenge-modal-title">
       <div class="bottom-sheet">
         <div class="sheet-handle"></div>
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div>
             <span class="chip" id="modal-challenge-chip" style="margin-bottom: 6px;">Εύκολη</span>
-            <h2 id="challenge-modal-title" style="font-size: 20px;">Τίτλος Πρόκλησης</h2>
+            <h2 id="challenge-modal-title" style="font-size: 20px;">Τίτλος</h2>
           </div>
           <button type="button" class="btn btn-secondary btn-pill" id="btn-close-challenge-modal" aria-label="Κλείσιμο">✕</button>
         </div>
         
-        <p id="challenge-modal-desc" style="margin: 12px 0 16px; font-size: 16px;"></p>
+        <p id="challenge-modal-desc" style="margin: 10px 0 14px; font-size: 15px;"></p>
 
-        <!-- Step 1: Pre-rating -->
+        <!-- Step 1: Social context + Pre-rating -->
         <div id="challenge-step-before">
-          <p style="font-weight: 700; font-size: 15px; color: var(--sea); margin-bottom: 4px;">
-            Πώς νιώθεις αυτή τη στιγμή με αυτή την πρόκληση;
+          <div style="font-weight: 800; font-size: 14px; color: var(--sea);">Με ποιον το έκανες / θα το κάνεις;</div>
+          <div class="social-grid" id="social-who-grid">
+            <button type="button" class="social-btn active" data-who="alone">🙋‍♀️<span>Μόνη μου</span><small>×1 XP</small></button>
+            <button type="button" class="social-btn" data-who="familiar">👯‍♀️<span>Με γνωστό</span><small>×1.5 XP</small></button>
+            <button type="button" class="social-btn" data-who="new">✨<span>Νέο άτομο</span><small>×2 XP</small></button>
+          </div>
+
+          <div style="font-weight: 800; font-size: 14px; color: var(--sea);">Πόσα άτομα ήσασταν;</div>
+          <div class="social-grid social-grid-4" id="social-count-grid">
+            <button type="button" class="social-btn active" data-count="1">1<span>+0%</span></button>
+            <button type="button" class="social-btn" data-count="2">2<span>+25%</span></button>
+            <button type="button" class="social-btn" data-count="3-4">3–4<span>+50%</span></button>
+            <button type="button" class="social-btn" data-count="5+">5+<span>+75%</span></button>
+          </div>
+
+          <div class="xp-preview-banner" id="challenge-xp-preview">Θα κερδίσεις: +10 XP</div>
+
+          <p style="font-weight: 700; font-size: 14px; color: var(--sea); margin-bottom: 2px;">
+            Πώς νιώθεις πριν ξεκινήσεις; (1: Άγχος — 10: Άνεση)
           </p>
-          <span class="text-muted" style="font-size: 13px;">1: Πολύ άγχος / δυσκολία — 10: Απόλυτη άνεση</span>
-          
           <div class="rating-row" id="rating-before-container"></div>
 
-          <div style="display: flex; gap: 10px; margin-top: 18px;">
-            <button type="button" class="btn btn-secondary" id="btn-challenge-not-now" style="flex: 1;">
-              Όχι τώρα
-            </button>
-            <button type="button" class="btn btn-primary" id="btn-challenge-did-it" style="flex: 1;">
-              Το έκανα!
-            </button>
+          <div style="display: flex; gap: 10px; margin-top: 14px;">
+            <button type="button" class="btn btn-secondary" id="btn-challenge-not-now" style="flex: 1;">Όχι τώρα</button>
+            <button type="button" class="btn btn-primary" id="btn-challenge-did-it" style="flex: 1;">Το έκανα!</button>
           </div>
-          <p class="text-muted" style="font-size: 12px; text-align: center; margin-top: 8px;">
-            Το κουμπί «Όχι τώρα» δεν έχει καμία απολύτως ποινή.
-          </p>
         </div>
 
-        <!-- Step 2: Post-rating (After clicking "Το έκανα") -->
+        <!-- Step 2: Post-rating -->
         <div id="challenge-step-after" style="display: none;">
           <p style="font-weight: 700; font-size: 15px; color: var(--sea); margin-bottom: 4px;">
-            Μπράβο σου! Πώς νιώθεις τώρα αφού το δοκίμασες;
+            Μπράβο σου! Πώς νιώθεις τώρα αφού το έκανες; (1–10)
           </p>
-          <span class="text-muted" style="font-size: 13px;">Βαθμολόγησε την άνεσή σου (1 έως 10):</span>
-
           <div class="rating-row" id="rating-after-container"></div>
-
-          <button type="button" class="btn btn-success btn-block" id="btn-challenge-submit-rating" style="margin-top: 18px;">
+          <button type="button" class="btn btn-success btn-block" id="btn-challenge-submit-rating" style="margin-top: 14px;">
             Ολοκλήρωση & Καταγραφή XP
           </button>
         </div>
-
-        <!-- Result announcement -->
-        <div id="challenge-step-result" style="display: none; text-align: center; padding: 12px 0;">
-          <div style="font-size: 32px; margin-bottom: 8px;">🎉</div>
-          <h3 id="challenge-result-message" style="color: var(--olive); font-size: 18px; margin-bottom: 8px;"></h3>
-          <p class="text-muted" id="challenge-result-xp" style="margin-bottom: 16px;"></p>
-          <button type="button" class="btn btn-primary btn-block" id="btn-challenge-finish">
-            Υπέροχα!
-          </button>
-        </div>
-
       </div>
     </div>
 
-    <!-- 3. Reflection Card Modal -->
+    <!-- 3. Add Map Pin & Photo Modal -->
+    <div id="modal-pin" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="pin-modal-title">
+      <div class="bottom-sheet">
+        <div class="sheet-handle"></div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h2 id="pin-modal-title" style="font-size: 20px;">📍 Νέο Σημείο στον Χάρτη</h2>
+          <button type="button" class="btn btn-secondary btn-pill" id="btn-close-pin-modal" aria-label="Κλείσιμο">✕</button>
+        </div>
+
+        <div class="form-group">
+          <label for="pin-title-input" class="form-label">Πού πήγες; (Τίτλος)</label>
+          <input type="text" id="pin-title-input" class="form-input" placeholder="π.χ. Σινεμά Αθηναία, Μοναστηράκι">
+        </div>
+
+        <div class="form-group">
+          <label for="pin-note-input" class="form-label">Μικρή σημείωση (προαιρετικό)</label>
+          <textarea id="pin-note-input" class="form-input" rows="2" placeholder="Τι σου άρεσε εκεί;"></textarea>
+        </div>
+
+        <div style="font-weight: 800; font-size: 14px; color: var(--sea);">Με ποιον πήγες;</div>
+        <div class="social-grid" id="pin-social-grid">
+          <button type="button" class="social-btn active" data-who="alone">🙋‍♀️<span>Μόνη</span></button>
+          <button type="button" class="social-btn" data-who="familiar">👯‍♀️<span>Με γνωστό</span></button>
+          <button type="button" class="social-btn" data-who="new">✨<span>Νέο άτομο</span></button>
+        </div>
+
+        <div class="form-group">
+          <label for="pin-photo-input" class="form-label">📸 Ανέβασε φωτογραφία (+20 XP bonus!)</label>
+          <input type="file" id="pin-photo-input" accept="image/*" class="form-input" style="padding: 10px;">
+          <img id="pin-photo-preview" src="" alt="Προεπισκόπηση" style="display: none; width: 100%; max-height: 150px; object-fit: cover; border-radius: 10px; margin-top: 8px;">
+        </div>
+
+        <button type="button" class="btn btn-primary btn-block" id="btn-save-pin">
+          Αποθήκευση Σημείου & XP
+        </button>
+      </div>
+    </div>
+
+    <!-- 4. Reflection Card Modal -->
     <div id="modal-card" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="card-modal-title">
       <div class="bottom-sheet">
         <div class="sheet-handle"></div>
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div>
             <span class="chip chip-xp" style="margin-bottom: 6px;">+10 XP</span>
-            <h2 id="card-modal-title" style="font-size: 20px;">Κάρτα Αντανάκλασης</h2>
+            <h2 id="card-modal-title" style="font-size: 20px;">Κάρτα Αναστοχασμού</h2>
           </div>
           <button type="button" class="btn btn-secondary btn-pill" id="btn-close-card-modal" aria-label="Κλείσιμο">✕</button>
         </div>
-
-        <p id="card-modal-question" style="font-size: 17px; font-weight: 700; color: var(--ink); margin: 16px 0 12px; line-height: 1.4;"></p>
-
+        <p id="card-modal-question" style="font-size: 17px; font-weight: 700; margin: 16px 0 12px;"></p>
         <div class="form-group">
-          <label for="card-modal-textarea" class="form-label text-muted">Γράψε τις σκέψεις σου (μένουν μόνο στο κινητό σου):</label>
-          <textarea id="card-modal-textarea" class="form-input" rows="4" style="resize: vertical;" placeholder="Γράψε ελεύθερα εδώ..."></textarea>
+          <label for="card-modal-textarea" class="form-label text-muted">Οι σκέψεις σου μένουν μόνο στο κινητό:</label>
+          <textarea id="card-modal-textarea" class="form-input" rows="4" placeholder="Γράψε ελεύθερα εδώ..."></textarea>
         </div>
-
-        <button type="button" class="btn btn-primary btn-block" id="btn-submit-card">
-          Ολοκλήρωση Κάρτας (+10 XP)
-        </button>
+        <button type="button" class="btn btn-primary btn-block" id="btn-submit-card">Ολοκλήρωση Κάρτας (+10 XP)</button>
       </div>
     </div>
 
-    <!-- 4. Treasure Modal -->
+    <!-- 5. Treasure Modal -->
     <div id="modal-treasure" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="treasure-modal-title">
       <div class="bottom-sheet">
         <div class="sheet-handle"></div>
@@ -1420,65 +1499,64 @@
           </div>
           <button type="button" class="btn btn-secondary btn-pill" id="btn-close-treasure-modal" aria-label="Κλείσιμο">✕</button>
         </div>
-
-        <div style="background: var(--sand); border-radius: var(--radius-md); padding: 14px; margin: 16px 0; border: 1px solid var(--card-border);">
-          <div style="font-size: 13px; font-weight: 800; color: var(--muted); text-transform: uppercase;">Υπαινιγμός:</div>
+        <div style="background: var(--sand); border-radius: var(--radius-md); padding: 14px; margin: 16px 0;">
+          <div style="font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase;">Υπαινιγμός:</div>
           <p id="treasure-modal-hint" style="font-size: 16px; font-weight: 700; margin-top: 4px;"></p>
         </div>
-
         <div id="treasure-modal-reward" style="display: none;" class="treasure-reward-box">
           <div style="font-weight: 800; color: var(--sun); margin-bottom: 4px;">✨ Μήνυμα Ανταμοιβής:</div>
           <p id="treasure-modal-reward-text" style="font-size: 15px; font-weight: 600;"></p>
         </div>
-
         <button type="button" class="btn btn-primary btn-block" id="btn-claim-treasure" style="margin-top: 14px;">
           Βρήκα τον θησαυρό! (+25 XP)
         </button>
       </div>
     </div>
 
-    <!-- 5. Full-Screen Level-Up Modal -->
-    <div id="modal-levelup" class="levelup-modal" role="dialog" aria-modal="true" aria-labelledby="levelup-title">
-      <div class="levelup-content">
-        <div style="font-size: 42px; margin-bottom: 6px;">🎉</div>
-        <span class="chip chip-xp" style="margin-bottom: 8px;">ΝΕΟ ΕΠΙΠΕΔΟ!</span>
-        <h2 id="levelup-title" style="font-size: 24px; color: var(--sea); margin-bottom: 6px;">Συγχαρητήρια!</h2>
-        <p style="font-size: 16px; font-weight: 700;" id="levelup-name-desc"></p>
-        
-        <div id="levelup-unlock-badge" style="background: rgba(246, 162, 58, 0.15); border: 1px solid var(--sun); border-radius: var(--radius-md); padding: 10px; margin: 16px 0; font-size: 14px; font-weight: 700; color: var(--ink);">
-          🎁 Ξεκλείδωσες νέο αξεσουάρ στο προφίλ!
+    <!-- 6. Unified Celebration Modal (Funny Avatar Animation + Fireworks + Quotes + Share) -->
+    <div id="modal-celebration" class="celebration-modal" role="dialog" aria-modal="true" aria-labelledby="cel-title">
+      <div class="celebration-card">
+        <div class="celebration-avatar-stage" id="cel-avatar-stage"></div>
+        <span class="chip chip-xp" id="cel-badge" style="margin-bottom: 6px;">+20 XP!</span>
+        <h2 id="cel-title" style="font-size: 22px; color: var(--sea); margin-bottom: 4px;">Μπράβο σου!</h2>
+        <p id="cel-subtitle" style="font-size: 15px; font-weight: 700;"></p>
+
+        <div class="quote-box">
+          <p class="quote-text" id="cel-quote-text"></p>
+          <div class="quote-author" id="cel-quote-author"></div>
         </div>
 
-        <button type="button" class="btn btn-primary btn-block" id="btn-close-levelup">
-          Συνέχεια!
-        </button>
+        <div style="display: flex; gap: 8px; margin-top: 12px;">
+          <button type="button" class="btn btn-sun" id="btn-cel-share" style="flex: 1;">
+            📤 Μοιράσου
+          </button>
+          <button type="button" class="btn btn-primary" id="btn-cel-close" style="flex: 1;">
+            Συνέχεια!
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- 6. Reset Confirmation Dialog -->
+    <!-- 7. Reset Confirmation Dialog -->
     <div id="modal-reset" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="reset-dialog-title">
       <div class="bottom-sheet">
         <div class="sheet-handle"></div>
         <h2 id="reset-dialog-title" style="color: var(--coral); margin-bottom: 8px;">Επαναφορά προόδου;</h2>
         <p style="font-size: 15px; margin-bottom: 20px;">
-          Είσαι σίγουρη ότι θέλεις να μηδενίσεις την πρόοδό σου; Όλα τα επίπεδα, τα XP, οι απαντήσεις και οι κάρτες θα διαγραφούν. Αυτή η ενέργεια δεν αναιρείται.
+          Είσαι σίγουρη ότι θέλεις να μηδενίσεις την πρόοδό σου; Όλα τα επίπεδα, τα XP, οι φωτογραφίες και τα σημεία θα διαγραφούν.
         </p>
         <div style="display: flex; gap: 10px;">
-          <button type="button" class="btn btn-secondary" id="btn-cancel-reset" style="flex: 1;">
-            Ακύρωση
-          </button>
-          <button type="button" class="btn btn-danger" id="btn-confirm-reset" style="flex: 1;">
-            Ναι, επαναφορά
-          </button>
+          <button type="button" class="btn btn-secondary" id="btn-cancel-reset" style="flex: 1;">Ακύρωση</button>
+          <button type="button" class="btn btn-danger" id="btn-confirm-reset" style="flex: 1;">Ναι, επαναφορά</button>
         </div>
       </div>
     </div>
 
-  </div> <!-- End #app-container -->
+  </div>
 
-  <!-- ==========================================================================
-       JAVASCRIPT: Single-file Vanilla Engine
-       ========================================================================== -->
+  <!-- Leaflet JS (OpenStreetMap) -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
   <script>
     'use strict';
 
@@ -1486,8 +1564,9 @@
        CONSTANTS & GAME DATA
        ========================================================================== */
     const STORAGE_KEY = 'athina-quest-v1';
+    const SHARE_URL = 'https://thisisamazing.github.io/athina-quest/';
 
-    const XP_THRESHOLDS = [0, 50, 120, 220, 350, 520, 750, 1000];
+    const XP_THRESHOLDS = [0, 50, 140, 260, 420, 620, 880, 1200];
 
     const LEVEL_NAMES = [
       'Νεοφερμένη',
@@ -1508,276 +1587,143 @@
     ];
 
     const ACCESSORIES = [
-      { id: 'none', name: 'Κανένα', unlockLevel: 1 },
-      { id: 'glasses', name: 'Γυαλιά', unlockLevel: 1 },
-      { id: 'scarf', name: 'Κασκόλ', unlockLevel: 2 },
-      { id: 'backpack', name: 'Σακίδιο', unlockLevel: 3 },
-      { id: 'headphones', name: 'Ακουστικά', unlockLevel: 4 }
+      { id: 'none', name: 'Κανένα' },
+      { id: 'glasses', name: 'Γυαλιά' },
+      { id: 'scarf', name: 'Κασκόλ' },
+      { id: 'backpack', name: 'Σακίδιο' },
+      { id: 'headphones', name: 'Ακουστικά' }
+    ];
+
+    const ZONES = [
+      { id: 'neighborhood', name: 'Η γειτονιά', icon: '🏡', unlockLevel: 1, desc: 'Το σπίτι και οι πρώτοι οικείοι δρόμοι.' },
+      { id: 'coffee',       name: 'Ο καφές',    icon: '☕', unlockLevel: 1, desc: 'Στέκια με άρωμα καφέ και ζωντάνια.' },
+      { id: 'faculty',      name: 'Η σχολή',    icon: '🎓', unlockLevel: 2, desc: 'Αμφιθέατρα, βιβλιοθήκες και συμφοιτητές.' },
+      { id: 'park',         name: 'Το πάρκο',   icon: '🌿', unlockLevel: 3, desc: 'Πράσινο, ησυχία και απογευματινοί περίπατοι.' },
+      { id: 'center',       name: 'Το κέντρο',  icon: '🏛️', unlockLevel: 4, desc: 'Μοναστηράκι, σινεμά, θέατρο και πολιτισμός.' }
     ];
 
     const LEVELS = [
       {
         level: 1,
-        title: 'Χάρτης',
+        title: 'Πρώτα Βήματα',
         challenges: [
-          {
-            id: 'c1_1',
-            level: 1,
-            title: 'Περπάτημα σε νέο δρόμο',
-            desc: 'Περπάτα 20 λεπτά σε δρόμο που δεν έχεις ξαναδεί.',
-            difficulty: 'Εύκολη',
-            xp: 10
-          },
-          {
-            id: 'c1_2',
-            level: 1,
-            title: 'Ένα νέο στέκι',
-            desc: 'Βρες ένα μέρος όπου θα ήθελες να ξαναπάς.',
-            difficulty: 'Εύκολη',
-            xp: 10
-          }
+          { id: 'c1_1', zone: 'neighborhood', title: 'Περπάτημα σε νέο δρόμο', desc: 'Περπάτα 20 λεπτά σε δρόμο που δεν έχεις ξαναδεί.', difficulty: 'Εύκολη', xp: 10 },
+          { id: 'c1_2', zone: 'coffee',       title: 'Ένα νέο στέκι', desc: 'Βρες ένα καφέ ή φούρνο όπου θα ήθελες να ξαναπάς.', difficulty: 'Εύκολη', xp: 10 }
         ]
       },
       {
         level: 2,
-        title: 'Η πρώτη φράση',
+        title: 'Η Πρώτη Φράση',
         challenges: [
-          {
-            id: 'c2_1',
-            level: 2,
-            title: 'Σημειώσεις ή γνώμη',
-            desc: 'Ζήτα από συμφοιτητή σημειώσεις ή γνώμη για ένα μάθημα.',
-            difficulty: 'Μεσαία',
-            xp: 20
-          },
-          {
-            id: 'c2_2',
-            level: 2,
-            title: 'Η πρώτη καλημέρα',
-            desc: 'Γράψε μία φράση που θα μπορούσες να πεις σε συμφοιτητή.',
-            difficulty: 'Εύκολη',
-            xp: 10
-          }
+          { id: 'c2_1', zone: 'faculty', title: 'Σημειώσεις ή γνώμη', desc: 'Ζήτα από συμφοιτητή σημειώσεις ή γνώμη για ένα μάθημα.', difficulty: 'Μεσαία', xp: 20 },
+          { id: 'c2_2', zone: 'faculty', title: 'Η πρώτη καλημέρα', desc: 'Πες μια φράση ή κάνε ένα μικρό σχόλιο σε συμφοιτητή.', difficulty: 'Εύκολη', xp: 10 }
         ]
       },
       {
         level: 3,
-        title: 'Το κοινό ποτό',
+        title: 'Παρέα στην Πόλη',
         challenges: [
-          {
-            id: 'c3_1',
-            level: 3,
-            title: 'Καφές ή περπάτημα',
-            desc: 'Καφές ή περπάτημα 30 λεπτών με έναν συμφοιτητή.',
-            difficulty: 'Μεσαία',
-            xp: 20
-          },
-          {
-            id: 'c3_2',
-            level: 3,
-            title: 'Το χειρότερο σενάριο',
-            desc: 'Πόσο πιθανό είναι το χειρότερο που μπορεί να γίνει;',
-            difficulty: 'Μεσαία',
-            xp: 20
-          }
+          { id: 'c3_1', zone: 'coffee', title: 'Καφές ή περπάτημα', desc: 'Καφές ή περπάτημα 30 λεπτών με έναν συμφοιτητή.', difficulty: 'Μεσαία', xp: 20 },
+          { id: 'c3_2', zone: 'park',   title: 'Απόγευμα στο πάρκο', desc: 'Βόλτα στο Πεδίον του Άρεως, στον Εθνικό Κήπο ή σε άλσος.', difficulty: 'Μεσαία', xp: 20 }
         ]
       },
       {
         level: 4,
-        title: 'Η ομάδα',
+        title: 'Η Ομάδα & Η Έξοδος',
         challenges: [
-          {
-            id: 'c4_1',
-            level: 4,
-            title: 'Μία συνάντηση δραστηριότητας',
-            desc: 'Αθλητικό τμήμα, ερευνητική ομάδα ή βιβλιοθήκη με συμφοιτητές.',
-            difficulty: 'Δύσκολη',
-            xp: 40
-          },
-          {
-            id: 'c4_2',
-            level: 4,
-            title: 'Άρωμα Πάτρας',
-            desc: 'Φτιάξε κάτι από την Πάτρα εδώ.',
-            difficulty: 'Μεσαία',
-            xp: 20
-          }
+          { id: 'c4_1', zone: 'faculty', title: 'Συνάντηση δραστηριότητας', desc: 'Αθλητικό τμήμα, ερευνητική ομάδα ή διάβασμα στη βιβλιοθήκη.', difficulty: 'Δύσκολη', xp: 40 },
+          { id: 'c4_2', zone: 'center',  title: 'Σινεμά στην Αθήνα', desc: 'Πήγαινε σε ένα θερινό ή κλειστό σινεμά (μόνη ή με παρέα!).', difficulty: 'Μεσαία', xp: 25 }
         ]
       },
       {
         level: 5,
-        title: 'Το αθηναϊκό Σάββατο',
+        title: 'Πολιτισμός & Γεύσεις',
         challenges: [
-          {
-            id: 'c5_1',
-            level: 5,
-            title: 'Βραδινό πλάνο',
-            desc: 'Βραδινό πλάνο με ένα άτομο.',
-            difficulty: 'Δύσκολη',
-            xp: 40
-          },
-          {
-            id: 'c5_2',
-            level: 5,
-            title: 'Νοσταλγία ή ανάγκη;',
-            desc: 'Νοσταλγία ή ανάγκη; (Κάρτα αναστοχασμού).',
-            difficulty: 'Μεσαία',
-            xp: 20
-          }
+          { id: 'c5_1', zone: 'center', title: 'Street food tour στο Μοναστηράκι', desc: 'Δοκίμασε 2-3 λιχουδιές περπατώντας στο Μοναστηράκι / Ψυρρή.', difficulty: 'Περιπέτεια', xp: 50 },
+          { id: 'c5_2', zone: 'center', title: 'Θεατρική παράσταση', desc: 'Κλείσε εισιτήριο και παρακολούθησε μια παράσταση.', difficulty: 'Δύσκολη', xp: 45 }
+        ]
+      },
+      {
+        level: 6,
+        title: 'Ζωντανή Αθήνα',
+        challenges: [
+          { id: 'c6_1', zone: 'center', title: 'Μουσική σκηνή / Live', desc: 'Ζήσε μια βραδιά σε μουσική σκηνή ή συναυλία.', difficulty: 'Περιπέτεια', xp: 60 },
+          { id: 'c6_2', zone: 'park',   title: 'Ηλιοβασίλεμα με θέα', desc: 'Ανέβα Λυκαβηττό, Φιλοπάππου ή Άρειο Πάγο για το ηλιοβασίλεμα.', difficulty: 'Μεσαία', xp: 30 }
+        ]
+      },
+      {
+        level: 7,
+        title: 'Κτίζοντας Συνήθειες',
+        challenges: [
+          { id: 'c7_1', zone: 'neighborhood', title: 'Άρωμα Πάτρας στο σπίτι', desc: 'Κάλεσε άτομο ή παρέα και φτιάξε κάτι αγαπημένο από την Πάτρα.', difficulty: 'Περιπέτεια', xp: 60 },
+          { id: 'c7_2', zone: 'center',       title: 'Μουσείο ή Έκθεση Τέχνης', desc: 'Επισκέψου το Μουσείο Ακρόπολης, ΕΜΣΤ, Μπενάκη ή ΚΠΙΣΝ.', difficulty: 'Δύσκολη', xp: 40 }
+        ]
+      },
+      {
+        level: 8,
+        title: 'Μεγάλη Εξερευνήτρια',
+        challenges: [
+          { id: 'c8_1', zone: 'center', title: 'Το μεγάλο αθηναϊκό Σάββατο', desc: 'Οργάνωσε εσύ μια έξοδο (καφέ + σινεμά/φαγητό) με 3+ άτομα!', difficulty: 'Θρυλική', xp: 80 },
+          { id: 'c8_2', zone: 'park',   title: 'Μέρα στο ΚΠΙΣΝ / Παραλία', desc: 'Ολοήμερη εξόρμηση στο Κέντρο Πολιτισμού Σταύρος Νιάρχος ή Φλοίσβο.', difficulty: 'Περιπέτεια', xp: 60 }
         ]
       }
     ];
 
     const CARDS = [
-      {
-        id: 'card_1',
-        title: 'Σύμβουλος φίλης',
-        question: 'Αν μια φίλη σου έλεγε αυτά που σκέφτεσαι για την Αθήνα, τι θα της έλεγες;',
-        xp: 10
-      },
-      {
-        id: 'card_2',
-        title: 'Τρία καλά',
-        question: 'Γράψε τρία πράγματα που ήταν καλά από τότε που ήρθες.',
-        xp: 10
-      },
-      {
-        id: 'card_3',
-        title: 'Βήμα σήμερα',
-        question: 'Ποιο μικρό βήμα μπορείς να κάνεις σήμερα σε 10 λεπτά;',
-        xp: 10
-      },
-      {
-        id: 'card_4',
-        title: 'Fact or Myth',
-        question: 'Ποια στοιχεία δείχνουν ότι η Αθήνα έχει κάτι καλό; Και ποια ότι δεν έχει;',
-        xp: 10
-      },
-      {
-        id: 'card_5',
-        title: 'Νοσταλγία ή ανάγκη;',
-        question: 'Μπορείς να ξεχωρίσεις τη νοσταλγία για το παρελθόν από την ανάγκη για νέες εμπειρίες στο παρόν;',
-        xp: 10
-      }
+      { id: 'card_1', title: 'Σύμβουλος φίλης', question: 'Αν μια φίλη σου έλεγε αυτά που σκέφτεσαι για την Αθήνα, τι θα της έλεγες;', xp: 10 },
+      { id: 'card_2', title: 'Τρία καλά', question: 'Γράψε τρία πράγματα που ήταν καλά από τότε που ήρθες.', xp: 10 },
+      { id: 'card_3', title: 'Βήμα σήμερα', question: 'Ποιο μικρό βήμα μπορείς να κάνεις σήμερα σε 10 λεπτά;', xp: 10 },
+      { id: 'card_4', title: 'Fact or Myth', question: 'Ποια στοιχεία δείχνουν ότι η Αθήνα έχει κάτι καλό; Και ποια ότι δεν έχει;', xp: 10 },
+      { id: 'card_5', title: 'Νοσταλγία ή ανάγκη;', question: 'Μπορείς να ξεχωρίσεις τη νοσταλγία για το παρελθόν από την ανάγκη για νέες εμπειρίες στο παρόν;', xp: 10 }
     ];
 
     const TREASURES = [
-      {
-        id: 't1',
-        name: 'Ο θησαυρός του καφέ',
-        hint: 'Εκεί που μυρίζει καλός καφές το πρωί',
-        unlockCondition: { type: 'level', value: 1 },
-        reward: 'Κάθισε 10 λεπτά σε τραπέζι χωρίς κινητό. Οι άνθρωποι γύρω σου έχουν κι αυτοί τη δική τους ιστορία.',
-        xp: 25
-      },
-      {
-        id: 't2',
-        name: 'Η σιωπηλή αίθουσα',
-        hint: 'Εκεί που όλοι διαβάζουν χωρίς να μιλούν',
-        unlockCondition: { type: 'level', value: 2 },
-        reward: 'Ξεκίνα με ένα μάθημα που σε ενδιαφέρει. Η αίθουσα είναι η αρχή, όχι το τέλος.',
-        xp: 25
-      },
-      {
-        id: 't3',
-        name: 'Το πάρκο με τα πουλιά',
-        hint: 'Ένα πράσινο μέρος όπου κάθονται οι άνθρωποι το απόγευμα',
-        unlockCondition: { type: 'level', value: 2 },
-        reward: 'Πήγαινε εκεί μία φορά την εβδομάδα. Η επανάληψη χτίζει την οικειότητα.',
-        xp: 25
-      },
-      {
-        id: 't4',
-        name: 'Ο δρόμος της μουσικής',
-        hint: 'Ένας δρόμος με ζωντανή κίνηση και ήχους',
-        unlockCondition: { type: 'level', value: 3 },
-        reward: 'Άκου έναν ήχο της πόλης και γράψε τι σου θύμισε. Η Αθήνα κι η Πάτρα μπορεί να μοιράζονται κάτι.',
-        xp: 25
-      },
-      {
-        id: 't5',
-        name: 'Η ταράτσα',
-        hint: 'Ένα ψηλό μέρος με θέα',
-        unlockCondition: { type: 'level', value: 3 },
-        reward: 'Βρες μια θέα που σου αρέσει. Κάθε πόλη έχει σημεία που θα αγαπήσεις.',
-        xp: 25
-      },
-      {
-        id: 't6',
-        name: 'Το μικρό θαύμα',
-        hint: 'Ένα μέρος που δεν έχεις ξαναπάει',
-        unlockCondition: { type: 'card', value: 'card_2' },
-        reward: 'Μία μικρή νίκη σήμερα. Ποια ήταν η δική σου;',
-        xp: 25
-      },
-      {
-        id: 't7',
-        name: 'Ο χάρτης της πόλης',
-        hint: 'Τρεις δρόμοι που δεν έχεις περπατήσει',
-        unlockCondition: { type: 'level', value: 4 },
-        reward: 'Κάθε δρόμος είναι μια νέα ιστορία. Ξεκίνα από τον πιο ήρεμο.',
-        xp: 25
-      },
-      {
-        id: 't8',
-        name: 'Ο θησαυρός της Πάτρας',
-        hint: 'Κάτι που θα ήθελες να φέρεις από την Πάτρα εδώ',
-        unlockCondition: { type: 'level', value: 4 },
-        reward: 'Βάλε κάτι από το σπίτι σου στη νέα σου γωνία. Η οικειότητα φτιάχνεται κομμάτι-κομμάτι.',
-        xp: 25
-      }
+      { id: 't1', name: 'Ο θησαυρός του καφέ', hint: 'Εκεί που μυρίζει καλός καφές το πρωί', unlockCondition: { type: 'level', value: 1 }, reward: 'Κάθισε 10 λεπτά σε τραπέζι χωρίς κινητό. Οι άνθρωποι γύρω σου έχουν κι αυτοί τη δική τους ιστορία.', xp: 25 },
+      { id: 't2', name: 'Η σιωπηλή αίθουσα', hint: 'Εκεί που όλοι διαβάζουν χωρίς να μιλούν', unlockCondition: { type: 'level', value: 2 }, reward: 'Ξεκίνα με ένα μάθημα που σε ενδιαφέρει. Η αίθουσα είναι η αρχή, όχι το τέλος.', xp: 25 },
+      { id: 't3', name: 'Το πάρκο με τα πουλιά', hint: 'Ένα πράσινο μέρος όπου κάθονται οι άνθρωποι το απόγευμα', unlockCondition: { type: 'level', value: 2 }, reward: 'Πήγαινε εκεί μία φορά την εβδομάδα. Η επανάληψη χτίζει την οικειότητα.', xp: 25 },
+      { id: 't4', name: 'Ο δρόμος της μουσικής', hint: 'Ένας δρόμος με ζωντανή κίνηση και ήχους', unlockCondition: { type: 'level', value: 3 }, reward: 'Άκου έναν ήχο της πόλης και γράψε τι σου θύμισε. Η Αθήνα κι η Πάτρα μπορεί να μοιράζονται κάτι.', xp: 25 },
+      { id: 't5', name: 'Η ταράτσα', hint: 'Ένα ψηλό μέρος με θέα', unlockCondition: { type: 'level', value: 3 }, reward: 'Βρες μια θέα που σου αρέσει. Κάθε πόλη έχει σημεία που θα αγαπήσεις.', xp: 25 },
+      { id: 't6', name: 'Το μικρό θαύμα', hint: 'Ένα μέρος που δεν έχεις ξαναπάει', unlockCondition: { type: 'card', value: 'card_2' }, reward: 'Μία μικρή νίκη σήμερα. Ποια ήταν η δική σου;', xp: 25 },
+      { id: 't7', name: 'Ο χάρτης της πόλης', hint: 'Τρεις δρόμοι που δεν έχεις περπατήσει', unlockCondition: { type: 'level', value: 4 }, reward: 'Κάθε δρόμος είναι μια νέα ιστορία. Ξεκίνα από τον πιο ήρεμο.', xp: 25 },
+      { id: 't8', name: 'Ο θησαυρός της Πάτρας', hint: 'Κάτι που θα ήθελες να φέρεις από την Πάτρα εδώ', unlockCondition: { type: 'level', value: 4 }, reward: 'Βάλε κάτι από το σπίτι σου στη νέα σου γωνία. Η οικειότητα φτιάχνεται κομμάτι-κομμάτι.', xp: 25 }
     ];
 
     const QUESTIONS = [
       {
         q: 'Όταν η σκέψη λέει «στην Αθήνα δεν περνάω καλά», τι βοηθά περισσότερο;',
-        options: [
-          'Να την πιστέψω.',
-          'Να ψάξω στοιχεία υπέρ και κατά.',
-          'Να μην σκεφτώ τίποτα.'
-        ],
+        options: ['Να την πιστέψω.', 'Να ψάξω στοιχεία υπέρ και κατά.', 'Να μην σκεφτώ τίποτα.'],
         answer: 1,
         explain: 'Η σκέψη είναι υπόθεση, όχι απόδειξη. Αναζητώντας στοιχεία, αποκτούμε πιο ρεαλιστική και ήρεμη εικόνα.'
       },
       {
         q: 'Τι βοηθά περισσότερο στην πρώτη επαφή;',
-        options: [
-          'Να περιμένεις να σε προσεγγίσουν.',
-          'Μια ερώτηση για το μάθημα.',
-          'Να μιλάς μόνο για τον εαυτό σου.'
-        ],
+        options: ['Να περιμένεις να σε προσεγγίσουν.', 'Μια ερώτηση για το μάθημα.', 'Να μιλάς μόνο για τον εαυτό σου.'],
         answer: 1,
         explain: 'Η ακαδημαϊκή αφορμή κάνει την πρώτη κουβέντα φυσική, εύκολη και χωρίς πίεση.'
       },
       {
         q: 'Η νοσταλγία είναι:',
-        options: [
-          'Σημάδι ότι έκανες λάθος.',
-          'Φυσική αντίδραση σε αλλαγή.',
-          'Κάτι που πρέπει να κρύβεις.'
-        ],
+        options: ['Σημάδι ότι έκανες λάθος.', 'Φυσική αντίδραση σε αλλαγή.', 'Κάτι που πρέπει να κρύβεις.'],
         answer: 1,
         explain: 'Δείχνει ότι κάτι σε αγγίζει και έχει αξία για σένα. Δεν σημαίνει ότι δεν θα προσαρμοστείς στο νέο περιβάλλον.'
       },
       {
         q: 'Τι μετράει ως «μικρό βήμα»;',
-        options: [
-          'Μια πράξη που μπορείς να κάνεις σήμερα σε 10 λεπτά.',
-          'Μια μεγάλη απόφαση.',
-          'Μια υπόσχεση για το μέλλον.'
-        ],
+        options: ['Μια πράξη που μπορείς να κάνεις σήμερα σε 10 λεπτά.', 'Μια μεγάλη απόφαση.', 'Μια υπόσχεση για το μέλλον.'],
         answer: 0,
         explain: 'Μια πράξη που γίνεται άμεσα σε 10 λεπτά είναι το πιο σταθερό θεμέλιο για να χτιστεί η οικειότητα.'
       },
       {
         q: 'Η σύγκριση «Πάτρα ή Αθήνα» είναι συνήθως:',
-        options: [
-          'Δίκαιη, γιατί η Πάτρα είναι πάντα καλύτερη.',
-          'Άδικη, γιατί συγκρίνεις μια γνωστή κατάσταση με μια νέα που ακόμα χτίζεται.',
-          'Αδιάφορη.'
-        ],
+        options: ['Δίκαιη, γιατί η Πάτρα είναι πάντα καλύτερη.', 'Άδικη, γιατί συγκρίνεις μια γνωστή κατάσταση με μια νέα που ακόμα χτίζεται.', 'Αδιάφορη.'],
         answer: 1,
         explain: 'Συγκρίνεις μια οικεία κατάσταση χρόνων με ένα καινούργιο ξεκίνημα που ακόμα ανακαλύπτεις.'
+      },
+      {
+        q: 'Όταν σκέφτεσαι να δοκιμάσεις κάτι καινούργιο (π.χ. σινεμά ή μουσική σκηνή) και διστάζεις, τι σε βοηθά;',
+        options: ['Να περιμένω να νιώσω 100% σίγουρη.', 'Να δώσω στον εαυτό μου την άδεια να πάει έστω για 20 λεπτά.', 'Να το ακυρώσω αμέσως.'],
+        answer: 1,
+        explain: 'Η δράση φέρνει την αυτοπεποίθηση, όχι το αντίστροφο. Ακόμα και 20 λεπτά είναι νίκη!'
       },
       {
         q: '[ΕΠΑΛΗΘΕΥΣΕ ΠΡΙΝ ΤΗ ΧΡΗΣΗ] Ερώτηση γνώσεων για την Αθήνα 1',
@@ -1798,38 +1744,157 @@
     const BADGES = [
       { id: 'b_first_step', name: 'Πρώτο βήμα', desc: '1 ολοκληρωμένη πρόκληση', icon: '🌱' },
       { id: 'b_first_phrase', name: 'Πρώτη φράση', desc: 'Πρόκληση Επιπέδου 2', icon: '💬' },
+      { id: 'b_social_spark', name: 'Κοινωνική σπίθα', desc: 'Δραστηριότητα με νέο άτομο ή παρέα', icon: '🤝' },
+      { id: 'b_map_explorer', name: 'Χαρτογράφος', desc: 'Αποθήκευση 2 σημείων στον χάρτη', icon: '📍' },
       { id: 'b_three_treasures', name: 'Τρεις θησαυροί', desc: '3 κρυμμένοι θησαυροί', icon: '🗝️' },
       { id: 'b_five_challenges', name: 'Πέντε προκλήσεις', desc: '5 ολοκληρωμένες προκλήσεις', icon: '⭐' },
       { id: 'b_all_cards', name: 'Όλες οι κάρτες', desc: 'Όλες οι κάρτες αναστοχασμού', icon: '✨' }
     ];
 
-    const ZONES = [
-      { id: 'neighborhood', name: 'Η γειτονιά', icon: '🏡', unlockLevel: 1, desc: 'Το σπίτι και οι πρώτοι οικείοι δρόμοι γύρω σου.' },
-      { id: 'coffee', name: 'Ο καφές', icon: '☕', unlockLevel: 1, desc: 'Στέκια με άρωμα καφέ και ζωντάνια.' },
-      { id: 'faculty', name: 'Η σχολή', icon: '🎓', unlockLevel: 2, desc: 'Αμφιθέατρα, βιβλιοθήκες και συμφοιτητές.' },
-      { id: 'park', name: 'Το πάρκο', icon: '🌿', unlockLevel: 3, desc: 'Πράσινο, ησυχία και απογευματινοί περίπατοι.' },
-      { id: 'center', name: 'Το κέντρο', icon: '🏛️', unlockLevel: 4, desc: 'Η καρδιά της Αθήνας, πλατείες και πολιτισμός.' }
+    /* Encouraging Quotes from Zig Ziglar, Jim Rohn, Tony Robbins, John Maxwell, Skip Ross */
+    const QUOTES = [
+      { text: 'Δεν χρειάζεται να είσαι σπουδαία για να ξεκινήσεις, αλλά πρέπει να ξεκινήσεις για να γίνεις σπουδαία.', author: 'Zig Ziglar' },
+      { text: 'Η στάση σου, και όχι η ικανότητά σου, είναι αυτή που καθορίζει το ύψος που θα φτάσεις.', author: 'Zig Ziglar' },
+      { text: 'Κάθε επιτυχία είναι ένα άθροισμα μικρών προσπαθειών που επαναλαμβάνονται μέρα με τη μέρα.', author: 'Zig Ziglar' },
+      { text: 'Αυτά που παίρνεις πετυχαίνοντας τους στόχους σου δεν είναι τόσο σημαντικά όσο αυτό που γίνεσαι.', author: 'Zig Ziglar' },
+      { text: 'Να προσέχεις πώς μιλάς στον εαυτό σου, γιατί σε ακούει.', author: 'Zig Ziglar' },
+
+      { text: 'Μην εύχεσαι να ήταν πιο εύκολο· να εύχεσαι να γίνεις εσύ πιο δυνατή.', author: 'Jim Rohn' },
+      { text: 'Είσαι ο μέσος όρος των πέντε ανθρώπων με τους οποίους περνάς τον περισσότερο χρόνο.', author: 'Jim Rohn' },
+      { text: 'Η πειθαρχία είναι η γέφυρα ανάμεσα στους στόχους και στα επιτεύγματα.', author: 'Jim Rohn' },
+      { text: 'Αν δεν σου αρέσει το πού βρίσκεσαι, άλλαξέ το — δεν είσαι δέντρο!', author: 'Jim Rohn' },
+      { text: 'Η επιτυχία δεν είναι τίποτα παραπάνω από μερικές απλές συνήθειες που εφαρμόζονται καθημερινά.', author: 'Jim Rohn' },
+
+      { text: 'Στις στιγμές των αποφάσεών σου διαμορφώνεται το πεπρωμένο σου.', author: 'Tony Robbins' },
+      { text: 'Το μυστικό για να προχωρήσεις μπροστά είναι να κάνεις το πρώτο βήμα τώρα.', author: 'Tony Robbins' },
+      { text: 'Εκεί που πηγαίνει η εστίασή σου, εκεί ρέει και η ενέργειά σου.', author: 'Tony Robbins' },
+      { text: 'Ο δρόμος προς την επιτυχία είναι να αναλαμβάνεις μαζική, αποφασιστική δράση.', author: 'Tony Robbins' },
+      { text: 'Η ποιότητα της ζωής σου είναι η ποιότητα των ερωτήσεων που κάνεις στον εαυτό σου.', author: 'Tony Robbins' },
+
+      { text: 'Μερικές φορές κερδίζεις και μερικές φορές μαθαίνεις.', author: 'John C. Maxwell' },
+      { text: 'Τα όνειρα δεν κοστίζουν τίποτα, αλλά η πραγματοποίησή τους θέλει ένα βήμα τη φορά.', author: 'John C. Maxwell' },
+      { text: 'Οι άνθρωποι μπορεί να ακούνε τα λόγια σου, αλλά νιώθουν τη στάση σου.', author: 'John C. Maxwell' },
+      { text: 'Η αλλαγή είναι αναπόφευκτη· η προσωπική ανάπτυξη είναι επιλογή.', author: 'John C. Maxwell' },
+      { text: 'Μικρές καθημερινές επιλογές χτίζουν το μεγάλο σου αύριο.', author: 'John C. Maxwell' },
+
+      { text: 'Η θετική προσμονή είναι η σπίθα που ανάβει κάθε σπουδαία εμπειρία.', author: 'Skip Ross' },
+      { text: 'Πίστεψε ότι αξίζεις όμορφες στιγμές και το μυαλό σου θα βρει τον τρόπο να τις φτιάξει.', author: 'Skip Ross' },
+      { text: 'Δεν ελέγχεις πάντα ό,τι συμβαίνει, αλλά ελέγχεις απόλυτα το πώς απαντάς σε αυτό.', author: 'Skip Ross' },
+      { text: 'Μια δυναμική μέρα ξεκινά από μια μικρή απόφαση να βγεις από τη ζώνη άνεσης.', author: 'Skip Ross' }
     ];
 
     /* ==========================================================================
-       SAFE STATE MANAGEMENT (LocalStorage + Memory Fallback)
+       INDEXED-DB FOR LOCAL PHOTOS (Private, High Capacity)
+       ========================================================================== */
+    const DB_NAME = 'athina-quest-photos-db';
+    const STORE_NAME = 'photos';
+
+    function openPhotoDB() {
+      return new Promise((resolve, reject) => {
+        if (!window.indexedDB) return reject('No IndexedDB');
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function savePhotoToDB(id, dataUrl) {
+      try {
+        const db = await openPhotoDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          tx.objectStore(STORE_NAME).put({ id, dataUrl });
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => reject(tx.error);
+        });
+      } catch (e) {
+        console.warn('Photo DB save error', e);
+        return false;
+      }
+    }
+
+    async function getPhotoFromDB(id) {
+      try {
+        const db = await openPhotoDB();
+        return new Promise((resolve) => {
+          const tx = db.transaction(STORE_NAME, 'readonly');
+          const req = tx.objectStore(STORE_NAME).get(id);
+          req.onsuccess = () => resolve(req.result ? req.result.dataUrl : null);
+          req.onerror = () => resolve(null);
+        });
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function clearPhotoDB() {
+      try {
+        const db = await openPhotoDB();
+        return new Promise((resolve) => {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          tx.objectStore(STORE_NAME).clear();
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(false);
+        });
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function compressImageFile(file, maxDim = 800) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let w = img.width;
+            let h = img.height;
+            if (w > h && w > maxDim) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else if (h >= w && h > maxDim) {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', 0.75));
+          };
+          img.onerror = () => resolve(null);
+          img.src = e.target.result;
+        };
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    /* ==========================================================================
+       SAFE STATE MANAGEMENT (Migrates v1 -> v2 seamlessly)
        ========================================================================== */
     const defaultState = {
       onboardingComplete: false,
       nickname: 'Εξερευνήτρια',
-      avatar: {
-        base: 0,
-        hairColor: 'brown',
-        accessory: 'none'
-      },
+      avatar: { base: 0, hairColor: 'brown', accessory: 'none' },
       xp: 0,
       level: 1,
+      zoneXp: { neighborhood: 0, coffee: 0, faculty: 0, park: 0, center: 0 },
       completedChallenges: [],
-      comfortRatings: {}, // { challengeId: { before: 5, after: 7 } }
+      challengeCounts: {},
+      comfortRatings: {},
       completedCards: [],
       cardAnswers: {},
       foundTreasures: [],
-      quizAnswers: {},
+      quizHistory: [], // { date, score, total }
+      mapPins: [],     // { id, lat, lng, title, note, who, hasPhoto, date }
       earnedBadges: [],
       history: []
     };
@@ -1841,7 +1906,12 @@
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
-          return Object.assign({}, defaultState, parsed);
+          const merged = Object.assign({}, defaultState, parsed);
+          merged.zoneXp = Object.assign({}, defaultState.zoneXp, parsed.zoneXp || {});
+          merged.challengeCounts = parsed.challengeCounts || {};
+          merged.quizHistory = parsed.quizHistory || [];
+          merged.mapPins = parsed.mapPins || [];
+          return merged;
         }
       } catch (err) {
         console.warn('LocalStorage unavailable, using in-memory state.', err);
@@ -1849,10 +1919,10 @@
       return inMemoryState ? Object.assign({}, inMemoryState) : Object.assign({}, defaultState);
     }
 
-    function saveState(state) {
-      inMemoryState = Object.assign({}, state);
+    function saveState(st) {
+      inMemoryState = Object.assign({}, st);
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(st));
       } catch (err) {
         console.warn('Could not write to localStorage, state kept in memory.', err);
       }
@@ -1861,17 +1931,43 @@
     let state = loadState();
 
     /* ==========================================================================
-       A11Y & ANNOUNCER
+       TOAST, SHARE & A11Y ANNOUNCER
        ========================================================================== */
-    function announce(message) {
+    function announce(msg) {
       const el = document.getElementById('a11y-announcer');
-      if (el) {
-        el.textContent = message;
+      if (el) el.textContent = msg;
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      if (!t) return;
+      t.textContent = msg;
+      t.classList.add('active');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('active'), 2600);
+    }
+
+    async function shareAchievement(title, text) {
+      const fullText = `${text}\n\n✨ Αθήνα Quest`;
+      if (navigator.share) {
+        try {
+          await navigator.share({ title, text: fullText, url: SHARE_URL });
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+        }
+      }
+      try {
+        await navigator.clipboard.writeText(`${fullText} ${SHARE_URL}`);
+        showToast('Αντιγράφηκε! Στείλ’ το σε μήνυμα στους φίλους σου 📤');
+      } catch (e) {
+        showToast('Μοιράσου το επίτευγμά σου με τους φίλους σου! ✨');
       }
     }
 
     /* ==========================================================================
-       AVATAR SVG GENERATOR (8 Inline SVG Characters, 4 Hair Colors, Accessories)
+       AVATAR SVG GENERATOR
        ========================================================================== */
     function getHairColorHex(colorId) {
       const match = HAIR_COLORS.find(c => c.id === colorId);
@@ -1885,10 +1981,8 @@
       const shirtColors = ['#1F6F8B', '#7A9E3B', '#F6A23A', '#E4572E', '#2A7B9B', '#638B2F', '#E68A24', '#1F6F8B'];
       const shirt = shirtColors[baseIndex % shirtColors.length];
 
-      // Hair paths per base
       let hairSvg = '';
       if (baseIndex === 0) {
-        // Curly afro puffs
         hairSvg = `
           <circle cx="36" cy="42" r="16" fill="${hairHex}"/>
           <circle cx="84" cy="42" r="16" fill="${hairHex}"/>
@@ -1897,18 +1991,13 @@
           <circle cx="75" cy="34" r="14" fill="${hairHex}"/>
         `;
       } else if (baseIndex === 1) {
-        // Long straight with bangs
         hairSvg = `
           <path d="M34 50 C32 28 88 28 86 50 C86 78 82 86 82 86 L78 60 L42 60 L38 86 C38 86 34 78 34 50 Z" fill="${hairHex}"/>
           <path d="M40 44 Q60 48 80 44 Q60 38 40 44 Z" fill="${hairHex}"/>
         `;
       } else if (baseIndex === 2) {
-        // Sleek Bob
-        hairSvg = `
-          <path d="M34 52 C32 26 88 26 86 52 C86 72 80 74 76 72 L76 56 L44 56 L44 72 C40 74 34 72 34 52 Z" fill="${hairHex}"/>
-        `;
+        hairSvg = `<path d="M34 52 C32 26 88 26 86 52 C86 72 80 74 76 72 L76 56 L44 56 L44 72 C40 74 34 72 34 52 Z" fill="${hairHex}"/>`;
       } else if (baseIndex === 3) {
-        // High ponytail
         hairSvg = `
           <circle cx="60" cy="42" r="24" fill="${hairHex}"/>
           <ellipse cx="60" cy="18" rx="8" ry="12" fill="${hairHex}"/>
@@ -1916,57 +2005,45 @@
           <circle cx="60" cy="22" r="4" fill="#F6A23A"/>
         `;
       } else if (baseIndex === 4) {
-        // Short crop / Pixie
         hairSvg = `
           <path d="M36 50 C34 30 86 30 84 50 Q86 42 60 38 Q34 42 36 50 Z" fill="${hairHex}"/>
           <path d="M42 38 Q50 32 62 36 Q74 34 78 40" stroke="${hairHex}" stroke-width="4" stroke-linecap="round"/>
         `;
       } else if (baseIndex === 5) {
-        // Wavy shoulder length
-        hairSvg = `
-          <path d="M34 48 C32 24 88 24 86 48 C88 68 84 84 78 86 C74 76 78 60 78 54 L42 54 C42 60 46 76 42 86 C36 84 32 68 34 48 Z" fill="${hairHex}"/>
-        `;
+        hairSvg = `<path d="M34 48 C32 24 88 24 86 48 C88 68 84 84 78 86 C74 76 78 60 78 54 L42 54 C42 60 46 76 42 86 C36 84 32 68 34 48 Z" fill="${hairHex}"/>`;
       } else if (baseIndex === 6) {
-        // Twin space buns
         hairSvg = `
           <circle cx="34" cy="26" r="14" fill="${hairHex}"/>
           <circle cx="86" cy="26" r="14" fill="${hairHex}"/>
           <path d="M38 46 C36 32 84 32 82 46 Q60 40 38 46 Z" fill="${hairHex}"/>
         `;
       } else {
-        // Soft waves with Headband
         hairSvg = `
           <path d="M34 48 C34 26 86 26 86 48 C88 74 80 82 76 82 L76 56 L44 56 L44 82 C40 82 32 74 34 48 Z" fill="${hairHex}"/>
           <path d="M38 44 Q60 38 82 44" stroke="#E4572E" stroke-width="5" fill="none" stroke-linecap="round"/>
         `;
       }
 
-      // Accessory overlay
       let accessorySvg = '';
       if (accessoryId === 'glasses') {
         accessorySvg = `
-          <!-- Glasses -->
           <circle cx="48" cy="56" r="10" stroke="#1F6F8B" stroke-width="2.5" fill="rgba(255,255,255,0.4)"/>
           <circle cx="72" cy="56" r="10" stroke="#1F6F8B" stroke-width="2.5" fill="rgba(255,255,255,0.4)"/>
           <path d="M58 56 L62 56" stroke="#1F6F8B" stroke-width="2.5"/>
-          <path d="M38 55 L34 53 M82 55 L86 53" stroke="#1F6F8B" stroke-width="2"/>
         `;
       } else if (accessoryId === 'scarf') {
         accessorySvg = `
-          <!-- Scarf -->
           <path d="M42 78 Q60 86 78 78 Q82 88 60 92 Q38 88 42 78 Z" fill="#F6A23A"/>
           <path d="M64 86 L68 106 L56 106 L60 88 Z" fill="#E4572E"/>
         `;
       } else if (accessoryId === 'backpack') {
         accessorySvg = `
-          <!-- Backpack Straps -->
           <path d="M38 82 L34 110 M82 82 L86 110" stroke="#E4572E" stroke-width="5" stroke-linecap="round"/>
           <rect x="33" y="94" width="7" height="4" rx="1" fill="#F6A23A"/>
           <rect x="80" y="94" width="7" height="4" rx="1" fill="#F6A23A"/>
         `;
       } else if (accessoryId === 'headphones') {
         accessorySvg = `
-          <!-- Headphones -->
           <path d="M36 56 C34 26 86 26 84 56" fill="none" stroke="#1F6F8B" stroke-width="4" stroke-linecap="round"/>
           <rect x="30" y="50" width="8" height="18" rx="4" fill="#1F6F8B"/>
           <rect x="82" y="50" width="8" height="18" rx="4" fill="#1F6F8B"/>
@@ -1975,291 +2052,228 @@
 
       return `
         <svg viewBox="0 0 120 120" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <!-- Background circle glow -->
           <circle cx="60" cy="60" r="54" fill="var(--sand)"/>
-          
-          <!-- Back hair (for long hair styles) -->
-          ${baseIndex === 1 || baseIndex === 5 || baseIndex === 7 ? `
-            <path d="M34 52 C32 24 88 24 86 52 C88 84 82 92 82 92 L38 92 C38 92 32 84 34 52 Z" fill="${hairHex}"/>
-          ` : ''}
-
-          <!-- Neck & Shoulders -->
+          ${baseIndex === 1 || baseIndex === 5 || baseIndex === 7 ? `<path d="M34 52 C32 24 88 24 86 52 C88 84 82 92 82 92 L38 92 C38 92 32 84 34 52 Z" fill="${hairHex}"/>` : ''}
           <path d="M54 74 L66 74 L68 84 L52 84 Z" fill="${skin}"/>
           <path d="M32 110 C32 88 44 82 60 82 C76 82 88 88 88 110 Z" fill="${shirt}"/>
-          <circle cx="60" cy="83" r="6" fill="${skin}"/>
-
-          <!-- Face -->
           <ellipse cx="60" cy="58" rx="22" ry="24" fill="${skin}"/>
-          
-          <!-- Cheeks -->
           <circle cx="47" cy="64" r="3.5" fill="#FCA892" opacity="0.6"/>
           <circle cx="73" cy="64" r="3.5" fill="#FCA892" opacity="0.6"/>
-
-          <!-- Eyes -->
           <circle cx="51" cy="57" r="3" fill="#1E2A32"/>
           <circle cx="69" cy="57" r="3" fill="#1E2A32"/>
           <circle cx="52" cy="56" r="1" fill="#FFFFFF"/>
           <circle cx="70" cy="56" r="1" fill="#FFFFFF"/>
-
-          <!-- Eyebrows -->
-          <path d="M47 51 Q51 49 55 51" stroke="#1E2A32" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-          <path d="M65 51 Q69 49 73 51" stroke="#1E2A32" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-
-          <!-- Nose -->
-          <path d="M60 59 L59 62 L62 62" stroke="${skin}" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-
-          <!-- Warm Smile -->
+          <path d="M47 51 Q51 49 55 51 M65 51 Q69 49 73 51" stroke="#1E2A32" stroke-width="1.8" fill="none" stroke-linecap="round"/>
           <path d="M54 67 Q60 72 66 67" stroke="#1E2A32" stroke-width="2" fill="none" stroke-linecap="round"/>
-
-          <!-- Front Hair -->
           ${hairSvg}
-
-          <!-- Accessory -->
           ${accessorySvg}
         </svg>
       `;
     }
 
     /* ==========================================================================
-       MAP SVG GENERATOR (Athens Topography, 5 Zones, Fog, Player Pin)
+       FIREWORKS ENGINE (3.8 seconds, bursts of colorful sparks)
        ========================================================================== */
-    function renderMapSvg() {
-      const userLevel = state.level;
-
-      // Coordinate map for zones
-      const zoneCoords = {
-        neighborhood: { x: 75, y: 260 },
-        coffee: { x: 150, y: 200 },
-        faculty: { x: 260, y: 210 },
-        park: { x: 130, y: 110 },
-        center: { x: 230, y: 90 }
-      };
-
-      // Current active player zone
-      let playerPos = zoneCoords.neighborhood;
-      if (userLevel >= 4) playerPos = zoneCoords.center;
-      else if (userLevel >= 3) playerPos = zoneCoords.park;
-      else if (userLevel >= 2) playerPos = zoneCoords.faculty;
-
-      return `
-        <svg viewBox="0 0 340 330" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" aria-label="Χάρτης Αθήνας με 5 ζώνες">
-          <defs>
-            <!-- Fog gradient filter -->
-            <linearGradient id="fogGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#E8E2D8" stop-opacity="0.8"/>
-              <stop offset="100%" stop-color="#D5CBBF" stop-opacity="0.5"/>
-            </linearGradient>
-            <filter id="shadow">
-              <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.2"/>
-            </filter>
-          </defs>
-
-          <!-- Mountain Contours (Hymettus, Lycabettus, Acropolis) -->
-          <path d="M220 50 Q280 20 340 80 L340 180 Q290 120 220 150 Z" fill="#EAE2D5" opacity="0.7"/>
-          <path d="M0 60 Q60 30 110 70 L90 140 Q40 110 0 130 Z" fill="#EAE2D5" opacity="0.6"/>
-
-          <!-- Lycabettus Peak -->
-          <path d="M180 130 L205 85 L230 130 Z" fill="#DECDB8"/>
-          <rect x="203" y="81" width="4" height="5" fill="#FFFFFF"/>
-
-          <!-- Acropolis Hill -->
-          <path d="M120 180 L140 162 L185 162 L200 180 Z" fill="#DECDB8"/>
-          <rect x="145" y="157" width="3" height="6" fill="#7A9E3B"/>
-          <rect x="153" y="157" width="3" height="6" fill="#7A9E3B"/>
-          <rect x="161" y="157" width="3" height="6" fill="#7A9E3B"/>
-          <rect x="169" y="157" width="3" height="6" fill="#7A9E3B"/>
-
-          <!-- Transit / Walking Connections (Dotted lines) -->
-          <path d="M75 260 Q110 230 150 200" stroke="#1F6F8B" stroke-width="3" stroke-dasharray="5 5" fill="none" opacity="0.6"/>
-          <path d="M150 200 Q205 210 260 210" stroke="#1F6F8B" stroke-width="3" stroke-dasharray="5 5" fill="none" opacity="0.6"/>
-          <path d="M150 200 Q130 150 130 110" stroke="#1F6F8B" stroke-width="3" stroke-dasharray="5 5" fill="none" opacity="0.6"/>
-          <path d="M130 110 Q180 90 230 90" stroke="#1F6F8B" stroke-width="3" stroke-dasharray="5 5" fill="none" opacity="0.6"/>
-
-          <!-- Hidden Treasures Fog Layer (Mystic clouds over unreached spots) -->
-          ${userLevel < 3 ? `
-            <g class="fog-group" opacity="0.75">
-              <ellipse cx="130" cy="110" rx="36" ry="24" fill="url(#fogGrad)"/>
-              <ellipse cx="145" cy="118" rx="28" ry="18" fill="url(#fogGrad)"/>
-              <text x="125" y="115" font-size="14" fill="#5C6B73">🌫️</text>
-            </g>
-          ` : ''}
-
-          ${userLevel < 4 ? `
-            <g class="fog-group" opacity="0.8">
-              <ellipse cx="230" cy="90" rx="42" ry="26" fill="url(#fogGrad)"/>
-              <ellipse cx="248" cy="96" rx="30" ry="20" fill="url(#fogGrad)"/>
-              <text x="225" y="95" font-size="14" fill="#5C6B73">🌫️</text>
-            </g>
-          ` : ''}
-
-          <!-- 5 Zone Interactive Pins -->
-          ${ZONES.map(z => {
-            const coord = zoneCoords[z.id];
-            const isUnlocked = userLevel >= z.unlockLevel;
-            const fillColor = isUnlocked ? '#1F6F8B' : '#5C6B73';
-            const icon = z.icon;
-            return `
-              <g class="map-pin ${isUnlocked ? 'unlocked' : 'locked'}" transform="translate(${coord.x}, ${coord.y})" filter="url(#shadow)" role="button" aria-label="${z.name} - ${isUnlocked ? 'Ξεκλείδωτη' : 'Κλειδωμένη'}">
-                <circle cx="0" cy="0" r="18" fill="${isUnlocked ? '#FFFFFF' : '#E0E0E0'}" stroke="${fillColor}" stroke-width="3"/>
-                <text x="0" y="5" font-size="16" text-anchor="middle">${icon}</text>
-                <rect x="-38" y="22" width="76" height="18" rx="9" fill="${fillColor}"/>
-                <text x="0" y="34" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">${z.name}</text>
-              </g>
-            `;
-          }).join('')}
-
-          <!-- Avatar "Είσαι εδώ!" Marker -->
-          <g transform="translate(${playerPos.x}, ${playerPos.y - 34})" filter="url(#shadow)">
-            <rect x="-34" y="-20" width="68" height="18" rx="9" fill="#F6A23A"/>
-            <text x="0" y="-8" font-size="10" font-weight="800" fill="#1E2A32" text-anchor="middle">Είσαι εδώ!</text>
-            <polygon points="0,0 -5,-4 5,-4" fill="#F6A23A"/>
-          </g>
-        </svg>
-      `;
-    }
-
-    /* ==========================================================================
-       CONFETTI SYSTEM (Canvas-based, 2 seconds, Respects prefers-reduced-motion)
-       ========================================================================== */
-    function launchConfetti() {
+    function launchFireworks(durationMs = 3800) {
       const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (prefersReduced) return;
 
-      const canvas = document.getElementById('confetti-canvas');
+      const canvas = document.getElementById('fireworks-canvas');
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       canvas.style.display = 'block';
 
-      const particles = [];
-      const colors = ['#F6A23A', '#1F6F8B', '#E4572E', '#7A9E3B', '#FFF6E9'];
-      for (let i = 0; i < 70; i++) {
-        particles.push({
-          x: canvas.width / 2,
-          y: canvas.height / 2 + 50,
-          vx: (Math.random() - 0.5) * 12,
-          vy: (Math.random() - 1.2) * 12,
-          size: Math.random() * 8 + 4,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          rotation: Math.random() * 360,
-          rSpeed: (Math.random() - 0.5) * 10
-        });
+      const colors = ['#F6A23A', '#1F6F8B', '#E4572E', '#7A9E3B', '#FFD166', '#FF6B9D', '#4CC9F0'];
+      const sparks = [];
+
+      function createBurst(cx, cy) {
+        const count = 42;
+        const burstColor = colors[Math.floor(Math.random() * colors.length)];
+        const altColor = colors[Math.floor(Math.random() * colors.length)];
+        for (let i = 0; i < count; i++) {
+          const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.2;
+          const speed = Math.random() * 5.5 + 2.2;
+          sparks.push({
+            x: cx,
+            y: cy,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            alpha: 1,
+            decay: Math.random() * 0.015 + 0.012,
+            size: Math.random() * 3 + 2,
+            color: i % 2 === 0 ? burstColor : altColor
+          });
+        }
       }
 
+      // Schedule bursts across 3-4 seconds
       const startTime = performance.now();
-      const duration = 2000; // 2 seconds
+      let nextBurst = 0;
 
       function frame(now) {
         const elapsed = now - startTime;
-        if (elapsed > duration) {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          canvas.style.display = 'none';
-          return;
+
+        if (elapsed > nextBurst && elapsed < durationMs - 600) {
+          const bx = canvas.width * (0.2 + Math.random() * 0.6);
+          const by = canvas.height * (0.15 + Math.random() * 0.45);
+          createBurst(bx, by);
+          nextBurst = elapsed + 380 + Math.random() * 250;
         }
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => {
-          p.x += p.vx;
-          p.y += p.vy;
-          p.vy += 0.25; // gravity
-          p.rotation += p.rSpeed;
+
+        for (let i = sparks.length - 1; i >= 0; i--) {
+          const s = sparks[i];
+          s.x += s.vx;
+          s.y += s.vy;
+          s.vy += 0.08;
+          s.vx *= 0.985;
+          s.alpha -= s.decay;
+
+          if (s.alpha <= 0) {
+            sparks.splice(i, 1);
+            continue;
+          }
 
           ctx.save();
-          ctx.translate(p.x, p.y);
-          ctx.rotate((p.rotation * Math.PI) / 180);
-          ctx.fillStyle = p.color;
-          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          ctx.globalAlpha = s.alpha;
+          ctx.fillStyle = s.color;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+          ctx.fill();
           ctx.restore();
-        });
+        }
 
-        requestAnimationFrame(frame);
+        if (elapsed < durationMs || sparks.length > 0) {
+          requestAnimationFrame(frame);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          canvas.style.display = 'none';
+        }
       }
+
       requestAnimationFrame(frame);
     }
 
     /* ==========================================================================
-       CORE GAME LOGIC: XP, Level-Up, Badges
+       CELEBRATION MODAL (Avatar Dance + Fireworks + Quote + Share)
+       ========================================================================== */
+    let lastSharePayload = { title: 'Αθήνα Quest', text: '' };
+
+    function triggerCelebration({ title, subtitle, xpEarned, isLevelUp = false, shareText = '' }) {
+      const modal = document.getElementById('modal-celebration');
+      const stage = document.getElementById('cel-avatar-stage');
+      const anims = ['anim-jump-spin', 'anim-dance', 'anim-bounce'];
+      const chosenAnim = anims[Math.floor(Math.random() * anims.length)];
+
+      stage.className = 'celebration-avatar-stage ' + chosenAnim;
+      stage.innerHTML = renderAvatarSvg(state.avatar.base, state.avatar.hairColor, state.avatar.accessory, 98);
+
+      document.getElementById('cel-badge').textContent = isLevelUp ? `🎉 ΝΕΟ ΕΠΙΠΕΔΟ ${state.level}!` : `+${xpEarned} XP!`;
+      document.getElementById('cel-title').textContent = title;
+      document.getElementById('cel-subtitle').textContent = subtitle;
+
+      const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+      document.getElementById('cel-quote-text').textContent = `«${quote.text}»`;
+      document.getElementById('cel-quote-author').textContent = `— ${quote.author}`;
+
+      lastSharePayload = {
+        title: 'Αθήνα Quest',
+        text: shareText || `Μόλις κέρδισα +${xpEarned} XP στο Αθήνα Quest! (${title}) 🎉`
+      };
+
+      modal.classList.add('active');
+      launchFireworks(isLevelUp ? 4500 : 3500);
+    }
+
+    document.getElementById('btn-cel-close').addEventListener('click', () => {
+      document.getElementById('modal-celebration').classList.remove('active');
+    });
+
+    document.getElementById('btn-cel-share').addEventListener('click', () => {
+      shareAchievement(lastSharePayload.title, lastSharePayload.text);
+    });
+
+    /* ==========================================================================
+       XP, ZONES & BADGES LOGIC
        ========================================================================== */
     function calculateLevel(xp) {
       let lvl = 1;
       for (let i = 0; i < XP_THRESHOLDS.length; i++) {
-        if (xp >= XP_THRESHOLDS[i]) {
-          lvl = i + 1;
-        }
+        if (xp >= XP_THRESHOLDS[i]) lvl = i + 1;
       }
       return Math.min(lvl, LEVEL_NAMES.length);
     }
 
-    function addXp(amount, reason) {
-      const prevXp = state.xp;
-      const prevLevel = calculateLevel(prevXp);
+    function getZoneLevelInfo(zoneId) {
+      const zXp = state.zoneXp[zoneId] || 0;
+      const thresholds = [0, 30, 80, 160, 280];
+      let zLvl = 1;
+      for (let i = 0; i < thresholds.length; i++) {
+        if (zXp >= thresholds[i]) zLvl = i + 1;
+      }
+      const nextXp = thresholds[zLvl] || (thresholds[thresholds.length - 1] + 150);
+      const currBase = thresholds[zLvl - 1] || 0;
+      const pct = Math.min(100, Math.round(((zXp - currBase) / (nextXp - currBase)) * 100));
+      return { zLvl, zXp, nextXp, pct };
+    }
+
+    function addXp(amount, reason, zoneId = null, celebrateOpts = null) {
+      const prevLevel = calculateLevel(state.xp);
       state.xp += amount;
       const newLevel = calculateLevel(state.xp);
       state.level = newLevel;
 
-      // Add to history
+      if (zoneId && state.zoneXp.hasOwnProperty(zoneId)) {
+        state.zoneXp[zoneId] += amount;
+      }
+
       state.history.unshift({
         text: reason,
         xp: amount,
         timestamp: new Date().toLocaleDateString('el-GR')
       });
 
-      // Check badges
       checkBadges();
-
       saveState(state);
       updateHeader();
-      announce(`Κέρδισες ${amount} πόντους! Σύνολο ${state.xp} XP.`);
+      announce(`Κέρδισες ${amount} XP! Σύνολο ${state.xp} XP.`);
 
-      // Check Level up
       if (newLevel > prevLevel) {
-        showLevelUpModal(newLevel);
+        const levelName = LEVEL_NAMES[newLevel - 1];
+        triggerCelebration({
+          title: `Έφτασες Επίπεδο ${newLevel}!`,
+          subtitle: `Νέος τίτλος: «${levelName}» (+${amount} XP)`,
+          xpEarned: amount,
+          isLevelUp: true,
+          shareText: `Ανέβηκα στο Επίπεδο ${newLevel}: «${levelName}» στο Αθήνα Quest! 🏛️✨`
+        });
+      } else if (celebrateOpts) {
+        triggerCelebration({
+          title: celebrateOpts.title,
+          subtitle: celebrateOpts.subtitle,
+          xpEarned: amount,
+          isLevelUp: false,
+          shareText: celebrateOpts.shareText
+        });
       }
     }
 
     function checkBadges() {
       const bSet = new Set(state.earnedBadges);
-
-      // «Πρώτο βήμα» (1 challenge)
-      if (state.completedChallenges.length >= 1 && !bSet.has('b_first_step')) {
-        state.earnedBadges.push('b_first_step');
-      }
-
-      // «Πρώτη φράση» (level 2 challenge done)
-      const hasLvl2Challenge = state.completedChallenges.some(id => id.startsWith('c2_'));
-      if (hasLvl2Challenge && !bSet.has('b_first_phrase')) {
-        state.earnedBadges.push('b_first_phrase');
-      }
-
-      // «Τρεις θησαυροί»
-      if (state.foundTreasures.length >= 3 && !bSet.has('b_three_treasures')) {
-        state.earnedBadges.push('b_three_treasures');
-      }
-
-      // «Πέντε προκλήσεις»
-      if (state.completedChallenges.length >= 5 && !bSet.has('b_five_challenges')) {
-        state.earnedBadges.push('b_five_challenges');
-      }
-
-      // «Όλες οι κάρτες»
-      if (state.completedCards.length >= CARDS.length && !bSet.has('b_all_cards')) {
-        state.earnedBadges.push('b_all_cards');
-      }
-    }
-
-    function showLevelUpModal(newLevel) {
-      const modal = document.getElementById('modal-levelup');
-      const desc = document.getElementById('levelup-name-desc');
-      const title = LEVEL_NAMES[newLevel - 1] || 'Εξερευνήτρια';
-      
-      desc.textContent = `Έφτασες στο Επίπεδο ${newLevel}: «${title}»!`;
-      modal.classList.add('active');
-      launchConfetti();
+      if (state.completedChallenges.length >= 1) bSet.add('b_first_step');
+      if (state.completedChallenges.some(id => id.startsWith('c2_'))) bSet.add('b_first_phrase');
+      if (state.foundTreasures.length >= 3) bSet.add('b_three_treasures');
+      if (state.completedChallenges.length >= 5) bSet.add('b_five_challenges');
+      if (state.completedCards.length >= CARDS.length) bSet.add('b_all_cards');
+      if (state.mapPins.length >= 2) bSet.add('b_map_explorer');
+      state.earnedBadges = Array.from(bSet);
     }
 
     /* ==========================================================================
-       SCREEN NAVIGATION & ROUTING
+       SCREEN NAVIGATION
        ========================================================================== */
     function switchScreen(targetScreenId) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -2269,16 +2283,10 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
-      // Update Nav active tab
       document.querySelectorAll('.nav-item').forEach(btn => {
-        if (btn.getAttribute('data-screen') === targetScreenId) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
-        }
+        btn.classList.toggle('active', btn.getAttribute('data-screen') === targetScreenId);
       });
 
-      // Render screen contents
       if (targetScreenId === 'screen-map') renderMapScreen();
       else if (targetScreenId === 'screen-challenges') renderChallengesScreen();
       else if (targetScreenId === 'screen-quiz') renderQuizScreen();
@@ -2298,18 +2306,14 @@
 
       header.style.display = 'flex';
       nav.style.display = 'flex';
-
       document.getElementById('header-nickname').textContent = state.nickname || 'Εξερευνήτρια';
       document.getElementById('header-level-title').textContent = `Επίπεδο ${state.level} • ${LEVEL_NAMES[state.level - 1]}`;
       document.getElementById('header-xp-val').textContent = state.xp;
-
-      // Miniature avatar in header
-      const headerAvatar = document.getElementById('header-avatar-icon');
-      headerAvatar.innerHTML = renderAvatarSvg(state.avatar.base, state.avatar.hairColor, state.avatar.accessory, 36);
+      document.getElementById('header-avatar-icon').innerHTML = renderAvatarSvg(state.avatar.base, state.avatar.hairColor, state.avatar.accessory, 36);
     }
 
     /* ==========================================================================
-       SCREEN 2: AVATAR CREATOR LOGIC
+       AVATAR CREATOR
        ========================================================================== */
     let tempAvatar = { base: 0, hairColor: 'brown', accessory: 'none' };
     let tempNickname = 'Εξερευνήτρια';
@@ -2320,67 +2324,55 @@
 
       const nickInput = document.getElementById('input-nickname');
       nickInput.value = tempNickname;
-      nickInput.addEventListener('input', (e) => {
+      nickInput.oninput = (e) => {
         tempNickname = e.target.value.trim() || 'Εξερευνήτρια';
         document.getElementById('preview-nickname-label').textContent = tempNickname;
-      });
+      };
 
-      // 1. Base grid (8 avatars)
       const baseGrid = document.getElementById('avatar-base-grid');
       baseGrid.innerHTML = '';
       for (let i = 0; i < 8; i++) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = `selector-btn ${tempAvatar.base === i ? 'active' : ''}`;
-        btn.setAttribute('aria-label', `Χαρακτήρας ${i + 1}`);
         btn.innerHTML = renderAvatarSvg(i, tempAvatar.hairColor, 'none', 44);
-        btn.addEventListener('click', () => {
+        btn.onclick = () => {
           tempAvatar.base = i;
-          document.querySelectorAll('#avatar-base-grid .selector-btn').forEach((b, idx) => {
-            b.classList.toggle('active', idx === i);
-          });
+          baseGrid.querySelectorAll('.selector-btn').forEach((b, idx) => b.classList.toggle('active', idx === i));
           refreshAvatarPreview();
-        });
+        };
         baseGrid.appendChild(btn);
       }
 
-      // 2. Hair color grid (4 colors)
       const hairGrid = document.getElementById('avatar-hair-grid');
       hairGrid.innerHTML = '';
       HAIR_COLORS.forEach(c => {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = `selector-btn ${tempAvatar.hairColor === c.id ? 'active' : ''}`;
-        btn.setAttribute('aria-label', c.name);
-        btn.innerHTML = `
-          <div class="color-swatch" style="background-color: ${c.hex};"></div>
-          <span style="font-size: 11px; margin-top: 4px; font-weight: 700;">${c.name}</span>
-        `;
-        btn.addEventListener('click', () => {
+        btn.innerHTML = `<div class="color-swatch" style="background-color: ${c.hex};"></div><span style="font-size: 11px; margin-top: 4px; font-weight: 700;">${c.name}</span>`;
+        btn.onclick = () => {
           tempAvatar.hairColor = c.id;
-          document.querySelectorAll('#avatar-hair-grid .selector-btn').forEach(b => b.classList.remove('active'));
+          hairGrid.querySelectorAll('.selector-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           refreshAvatarPreview();
-        });
+        };
         hairGrid.appendChild(btn);
-      }
-      );
+      });
 
-      // 3. Accessory grid
       const accGrid = document.getElementById('avatar-accessory-grid');
       accGrid.innerHTML = '';
       ACCESSORIES.forEach(a => {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = `selector-btn ${tempAvatar.accessory === a.id ? 'active' : ''}`;
-        btn.setAttribute('aria-label', a.name);
         btn.innerHTML = `<span style="font-size: 12px; font-weight: 800;">${a.name}</span>`;
-        btn.addEventListener('click', () => {
+        btn.onclick = () => {
           tempAvatar.accessory = a.id;
-          document.querySelectorAll('#avatar-accessory-grid .selector-btn').forEach(b => b.classList.remove('active'));
+          accGrid.querySelectorAll('.selector-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           refreshAvatarPreview();
-        });
+        };
         accGrid.appendChild(btn);
       });
 
@@ -2388,47 +2380,326 @@
     }
 
     function refreshAvatarPreview() {
-      const box = document.getElementById('avatar-preview-box');
-      box.innerHTML = renderAvatarSvg(tempAvatar.base, tempAvatar.hairColor, tempAvatar.accessory, 130);
+      document.getElementById('avatar-preview-box').innerHTML = renderAvatarSvg(tempAvatar.base, tempAvatar.hairColor, tempAvatar.accessory, 130);
     }
 
     /* ==========================================================================
-       SCREEN 3: MAP SCREEN RENDERER
+       MAP SCREEN (SVG ZONES + REAL LEAFLET MAP + PHOTOS)
        ========================================================================== */
-    function renderMapScreen() {
-      const container = document.getElementById('map-interactive-container');
-      container.innerHTML = renderMapSvg();
+    function renderMapSvg() {
+      const userLevel = state.level;
+      const zoneCoords = {
+        neighborhood: { x: 75, y: 260 },
+        coffee:       { x: 150, y: 200 },
+        faculty:      { x: 260, y: 210 },
+        park:         { x: 130, y: 110 },
+        center:       { x: 230, y: 90 }
+      };
 
-      // Render zones list below map
-      const list = document.getElementById('map-zones-list-container');
-      list.innerHTML = ZONES.map(z => {
+      let playerPos = zoneCoords.neighborhood;
+      if (userLevel >= 4) playerPos = zoneCoords.center;
+      else if (userLevel >= 3) playerPos = zoneCoords.park;
+      else if (userLevel >= 2) playerPos = zoneCoords.faculty;
+
+      return `
+        <svg viewBox="0 0 340 320" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" aria-label="Χάρτης Αθήνας">
+          <path d="M220 50 Q280 20 340 80 L340 180 Q290 120 220 150 Z" fill="#EAE2D5" opacity="0.7"/>
+          <path d="M0 60 Q60 30 110 70 L90 140 Q40 110 0 130 Z" fill="#EAE2D5" opacity="0.6"/>
+          <path d="M180 130 L205 85 L230 130 Z" fill="#DECDB8"/>
+          <path d="M120 180 L140 162 L185 162 L200 180 Z" fill="#DECDB8"/>
+          <path d="M75 260 Q110 230 150 200 Q205 210 260 210" stroke="#1F6F8B" stroke-width="3" stroke-dasharray="5 5" fill="none" opacity="0.5"/>
+          <path d="M150 200 Q130 150 130 110 Q180 90 230 90" stroke="#1F6F8B" stroke-width="3" stroke-dasharray="5 5" fill="none" opacity="0.5"/>
+
+          ${ZONES.map(z => {
+            const coord = zoneCoords[z.id];
+            const isUnlocked = userLevel >= z.unlockLevel;
+            const zInfo = getZoneLevelInfo(z.id);
+            const fillColor = isUnlocked ? '#1F6F8B' : '#5C6B73';
+            return `
+              <g transform="translate(${coord.x}, ${coord.y})">
+                <circle cx="0" cy="0" r="18" fill="${isUnlocked ? '#FFFFFF' : '#E0E0E0'}" stroke="${fillColor}" stroke-width="3"/>
+                <text x="0" y="5" font-size="16" text-anchor="middle">${z.icon}</text>
+                <rect x="-40" y="21" width="80" height="17" rx="8" fill="${fillColor}"/>
+                <text x="0" y="33" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">${z.name} ★${zInfo.zLvl}</text>
+              </g>
+            `;
+          }).join('')}
+
+          <g transform="translate(${playerPos.x}, ${playerPos.y - 34})">
+            <rect x="-34" y="-20" width="68" height="18" rx="9" fill="#F6A23A"/>
+            <text x="0" y="-8" font-size="10" font-weight="800" fill="#1E2A32" text-anchor="middle">Είσαι εδώ!</text>
+            <polygon points="0,0 -5,-4 5,-4" fill="#F6A23A"/>
+          </g>
+        </svg>
+      `;
+    }
+
+    function renderMapScreen() {
+      document.getElementById('map-interactive-container').innerHTML = renderMapSvg();
+
+      document.getElementById('map-zones-list-container').innerHTML = ZONES.map(z => {
         const isUnlocked = state.level >= z.unlockLevel;
+        const info = getZoneLevelInfo(z.id);
+        const stars = '★'.repeat(info.zLvl) + '☆'.repeat(5 - info.zLvl);
         return `
           <div class="zone-item ${isUnlocked ? 'unlocked' : 'locked'}">
-            <div class="zone-info">
-              <span class="zone-icon">${z.icon}</span>
-              <div>
-                <div style="font-weight: 800; font-size: 15px;">${z.name}</div>
-                <div class="text-muted" style="font-size: 12px;">${z.desc}</div>
+            <div class="zone-top">
+              <div class="zone-info">
+                <span class="zone-icon">${z.icon}</span>
+                <div>
+                  <div style="font-weight: 800; font-size: 15px;">${z.name}</div>
+                  <div class="text-muted" style="font-size: 12px;">${z.desc}</div>
+                </div>
+              </div>
+              <div style="text-align: right;">
+                <div class="zone-stars">${stars}</div>
+                <span class="text-muted" style="font-size: 11px;">Επ. ${info.zLvl} (${info.zXp} XP)</span>
               </div>
             </div>
-            <div>
-              ${isUnlocked
-                ? '<span class="chip" style="background: rgba(122, 158, 59, 0.2); color: var(--olive);">Ανοιχτή</span>'
-                : `<span class="chip" style="background: rgba(92, 107, 115, 0.15); color: var(--muted);">Επίπεδο ${z.unlockLevel}</span>`
-              }
+            <div class="zone-bar-bg">
+              <div class="zone-bar-fill" style="width: ${info.pct}%;"></div>
             </div>
           </div>
         `;
       }).join('');
+
+      if (document.getElementById('map-view-real').style.display !== 'none') {
+        initOrRefreshLeaflet();
+      }
     }
 
+    /* Leaflet Real Map & Pins */
+    let leafletMap = null;
+    let leafletMarkersLayer = null;
+    let pendingPinLatLng = { lat: 37.9838, lng: 23.7275 };
+    let pendingPinPhotoData = null;
+
+    function initOrRefreshLeaflet() {
+      if (typeof L === 'undefined') {
+        document.getElementById('leaflet-map').style.display = 'none';
+        document.getElementById('leaflet-offline-fallback').style.display = 'block';
+        renderSavedPinsList();
+        return;
+      }
+
+      if (!leafletMap) {
+        leafletMap = L.map('leaflet-map').setView([37.9838, 23.7275], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap',
+          maxZoom: 19
+        }).addTo(leafletMap);
+
+        leafletMarkersLayer = L.layerGroup().addTo(leafletMap);
+
+        leafletMap.on('click', (e) => {
+          openAddPinModal(e.latlng.lat, e.latlng.lng);
+        });
+      } else {
+        setTimeout(() => leafletMap.invalidateSize(), 120);
+      }
+
+      refreshLeafletMarkers();
+      renderSavedPinsList();
+    }
+
+    async function refreshLeafletMarkers() {
+      if (!leafletMarkersLayer) return;
+      leafletMarkersLayer.clearLayers();
+
+      for (const pin of state.mapPins) {
+        const photoUrl = pin.hasPhoto ? await getPhotoFromDB(pin.id) : null;
+        const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${pin.lat},${pin.lng}`;
+        const popupHtml = `
+          <div style="min-width: 170px; font-family: 'Nunito', sans-serif;">
+            <strong style="color: #1F6F8B; font-size: 14px;">${pin.title}</strong><br>
+            ${pin.note ? `<span style="font-size: 12px;">${pin.note}</span><br>` : ''}
+            ${photoUrl ? `<img src="${photoUrl}" style="width: 100%; max-height: 110px; object-fit: cover; border-radius: 6px; margin: 6px 0;">` : ''}
+            <a href="${gmapsUrl}" target="_blank" rel="noopener" style="font-size: 12px; font-weight: 700; color: #E4572E;">Άνοιγμα στο Google Maps ➔</a>
+          </div>
+        `;
+        L.marker([pin.lat, pin.lng]).addTo(leafletMarkersLayer).bindPopup(popupHtml);
+      }
+    }
+
+    async function renderSavedPinsList() {
+      const list = document.getElementById('saved-pins-list');
+      if (state.mapPins.length === 0) {
+        list.innerHTML = '<div class="card text-muted" style="text-align: center;">Πάτα πάνω στον χάρτη ή στο κουμπί για να αποθηκεύσεις το πρώτο σου μέρος στην Αθήνα!</div>';
+        return;
+      }
+
+      let html = '';
+      for (const pin of state.mapPins) {
+        const photoUrl = pin.hasPhoto ? await getPhotoFromDB(pin.id) : null;
+        const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${pin.lat},${pin.lng}`;
+        html += `
+          <div class="pin-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <h4 style="font-size: 16px; font-weight: 800;">📍 ${pin.title}</h4>
+                <span class="text-muted" style="font-size: 12px;">${pin.date}</span>
+              </div>
+              <button type="button" class="btn btn-secondary btn-pill" onclick="sharePin('${pin.id}')">📤 Μοιράσου</button>
+            </div>
+            ${pin.note ? `<p style="font-size: 14px;">${pin.note}</p>` : ''}
+            ${photoUrl ? `<img src="${photoUrl}" class="pin-photo-thumb" alt="${pin.title}">` : ''}
+            <a href="${gmapsUrl}" target="_blank" rel="noopener" class="btn btn-outline btn-pill" style="align-self: flex-start;">
+              🗺️ Άνοιγμα στο Google Maps
+            </a>
+          </div>
+        `;
+      }
+      list.innerHTML = html;
+    }
+
+    window.sharePin = function(pinId) {
+      const p = state.mapPins.find(x => x.id === pinId);
+      if (!p) return;
+      shareAchievement('Αθήνα Quest', `Ανακάλυψα ένα υπέροχο μέρος στην Αθήνα: «${p.title}»! 📍✨`);
+    };
+
+    let pinWho = 'alone';
+    function openAddPinModal(lat, lng) {
+      pendingPinLatLng = { lat, lng };
+      pendingPinPhotoData = null;
+      pinWho = 'alone';
+      document.getElementById('pin-title-input').value = '';
+      document.getElementById('pin-note-input').value = '';
+      document.getElementById('pin-photo-input').value = '';
+      document.getElementById('pin-photo-preview').style.display = 'none';
+      document.querySelectorAll('#pin-social-grid .social-btn').forEach(b => b.classList.toggle('active', b.dataset.who === 'alone'));
+      document.getElementById('modal-pin').classList.add('active');
+    }
+
+    document.querySelectorAll('#pin-social-grid .social-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        pinWho = btn.dataset.who;
+        document.querySelectorAll('#pin-social-grid .social-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    document.getElementById('pin-photo-input').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const compressed = await compressImageFile(file, 800);
+      if (compressed) {
+        pendingPinPhotoData = compressed;
+        const img = document.getElementById('pin-photo-preview');
+        img.src = compressed;
+        img.style.display = 'block';
+      }
+    });
+
+    document.getElementById('btn-save-pin').addEventListener('click', async () => {
+      const title = document.getElementById('pin-title-input').value.trim();
+      if (!title) {
+        showToast('Γράψε ένα όνομα για το μέρος!');
+        return;
+      }
+      const note = document.getElementById('pin-note-input').value.trim();
+      const id = 'pin_' + Date.now();
+      let hasPhoto = false;
+
+      if (pendingPinPhotoData) {
+        hasPhoto = await savePhotoToDB(id, pendingPinPhotoData);
+      }
+
+      const newPin = {
+        id,
+        lat: pendingPinLatLng.lat,
+        lng: pendingPinLatLng.lng,
+        title,
+        note,
+        who: pinWho,
+        hasPhoto,
+        date: new Date().toLocaleDateString('el-GR')
+      };
+
+      state.mapPins.unshift(newPin);
+      let xp = 30 + (hasPhoto ? 20 : 0);
+      if (pinWho === 'familiar') xp = Math.round(xp * 1.25);
+      if (pinWho === 'new') xp = Math.round(xp * 1.5);
+
+      document.getElementById('modal-pin').classList.remove('active');
+      addXp(xp, `Νέο σημείο στον χάρτη: ${title}`, 'center', {
+        title: 'Νέο Σημείο στον Χάρτη!',
+        subtitle: `Αποθήκευσες το «${title}»${hasPhoto ? ' με φωτογραφία' : ''}!`,
+        shareText: `Πήγα στο «${title}» και το πρόσθεσα στον χάρτη μου στο Αθήνα Quest! 📍✨`
+      });
+
+      refreshLeafletMarkers();
+      renderSavedPinsList();
+    });
+
+    document.getElementById('btn-add-pin-manual').addEventListener('click', () => {
+      const center = leafletMap ? leafletMap.getCenter() : { lat: 37.9838, lng: 23.7275 };
+      openAddPinModal(center.lat, center.lng);
+    });
+
+    document.getElementById('btn-close-pin-modal').addEventListener('click', () => {
+      document.getElementById('modal-pin').classList.remove('active');
+    });
+
+    document.querySelectorAll('#area-jump-chips .area-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const lat = parseFloat(btn.dataset.lat);
+        const lng = parseFloat(btn.dataset.lng);
+        if (leafletMap) leafletMap.setView([lat, lng], 15);
+      });
+    });
+
+    /* Map Sub-tabs */
+    document.getElementById('map-tab-zones').addEventListener('click', () => {
+      document.getElementById('map-tab-zones').classList.add('active');
+      document.getElementById('map-tab-real').classList.remove('active');
+      document.getElementById('map-view-zones').style.display = 'block';
+      document.getElementById('map-view-real').style.display = 'none';
+    });
+    document.getElementById('map-tab-real').addEventListener('click', () => {
+      document.getElementById('map-tab-real').classList.add('active');
+      document.getElementById('map-tab-zones').classList.remove('active');
+      document.getElementById('map-view-real').style.display = 'block';
+      document.getElementById('map-view-zones').style.display = 'none';
+      initOrRefreshLeaflet();
+    });
+
     /* ==========================================================================
-       SCREEN 4: CHALLENGES & REFLECTION CARDS RENDERER
+       SCREEN 4: CHALLENGES, EXPLORATIONS & SOCIAL MULTIPLIER
        ========================================================================== */
     let currentSelectedChallenge = null;
+    let selWho = 'alone';
+    let selCount = '1';
     let preRatingValue = 5;
     let postRatingValue = 7;
+
+    function getDiffChipClass(diff) {
+      if (diff === 'Εύκολη') return 'chip-easy';
+      if (diff === 'Μεσαία') return 'chip-medium';
+      if (diff === 'Δύσκολη') return 'chip-hard';
+      if (diff === 'Περιπέτεια') return 'chip-adventure';
+      return 'chip-legend';
+    }
+
+    function calculateSocialXp(baseXp, who, count) {
+      let mult = 1;
+      if (who === 'familiar') mult = 1.5;
+      else if (who === 'new') mult = 2.0;
+
+      if (count === '2') mult += 0.25;
+      else if (count === '3-4') mult += 0.5;
+      else if (count === '5+') mult += 0.75;
+
+      return Math.round(baseXp * mult);
+    }
+
+    function updateChallengeXpPreview() {
+      if (!currentSelectedChallenge) return;
+      const xp = calculateSocialXp(currentSelectedChallenge.xp, selWho, selCount);
+      const isRepeat = (state.challengeCounts[currentSelectedChallenge.id] || 0) > 0;
+      const finalXp = (isRepeat && selWho === 'alone' && selCount === '1') ? Math.max(5, Math.round(xp * 0.6)) : xp;
+      document.getElementById('challenge-xp-preview').textContent = `Θα κερδίσεις: +${finalXp} XP${(selWho !== 'alone' || selCount !== '1') ? ' (με Bonus παρέας!)' : ''}`;
+    }
 
     function renderChallengesScreen() {
       const container = document.getElementById('challenges-list-container');
@@ -2437,34 +2708,27 @@
         return `
           <div class="level-group">
             <div class="level-group-header">
-              <h3 style="font-size: 16px; color: var(--sea);">
-                Επίπεδο ${lvl.level}: ${lvl.title}
-              </h3>
-              ${!isLevelUnlocked ? '<span class="text-muted" style="font-size: 12px;">🔒 Κλειδωμένο</span>' : ''}
+              <h3 style="font-size: 16px; color: var(--sea);">Επίπεδο ${lvl.level}: ${lvl.title}</h3>
+              ${!isLevelUnlocked ? '<span class="text-muted" style="font-size: 12px;">🔒 Επίπεδο ' + lvl.level + '</span>' : ''}
             </div>
 
             ${lvl.challenges.map(c => {
-              const isDone = state.completedChallenges.includes(c.id);
-              const chipClass = c.difficulty === 'Εύκολη' ? 'chip-easy' : (c.difficulty === 'Μεσαία' ? 'chip-medium' : 'chip-hard');
+              const countDone = state.challengeCounts[c.id] || (state.completedChallenges.includes(c.id) ? 1 : 0);
+              const isDone = countDone > 0;
               return `
-                <div class="challenge-card ${isDone ? 'completed' : ''}" style="${!isLevelUnlocked ? 'opacity: 0.6;' : ''}">
+                <div class="challenge-card ${isDone ? 'completed' : ''}" style="${!isLevelUnlocked ? 'opacity: 0.62;' : ''}">
                   <div class="challenge-top">
                     <div>
-                      <span class="chip ${chipClass}">${c.difficulty} (+${c.xp} XP)</span>
+                      <span class="chip ${getDiffChipClass(c.difficulty)}">${c.difficulty} (βάση ${c.xp} XP)</span>
                       <h4 style="font-size: 16px; font-weight: 800; margin-top: 6px;">${c.title}</h4>
                     </div>
-                    ${isDone ? '<span style="color: var(--olive); font-size: 20px;">✓</span>' : ''}
+                    ${isDone ? `<span class="chip chip-easy">✓ ×${countDone}</span>` : ''}
                   </div>
-                  <p style="font-size: 14px; color: var(--ink);">${c.desc}</p>
-                  
+                  <p style="font-size: 14px;">${c.desc}</p>
                   <div class="challenge-actions">
-                    ${isDone ? `
-                      <span class="text-muted" style="font-size: 13px; font-weight: 700;">Ολοκληρώθηκε! 🎉</span>
-                    ` : `
-                      <button type="button" class="btn btn-secondary btn-pill" onclick="openChallengeModal('${c.id}')" ${!isLevelUnlocked ? 'disabled' : ''}>
-                        Προβολή & Άνεση
-                      </button>
-                    `}
+                    <button type="button" class="btn btn-secondary btn-pill" onclick="openChallengeModal('${c.id}')" ${!isLevelUnlocked ? 'disabled' : ''}>
+                      ${isDone ? '🔁 Επανάληψη με νέα/περισσότερη παρέα' : 'Προβολή & Καταγραφή'}
+                    </button>
                   </div>
                 </div>
               `;
@@ -2473,62 +2737,69 @@
         `;
       }).join('');
 
-      // Reflection cards render
-      const cardsContainer = document.getElementById('cards-list-container');
-      cardsContainer.innerHTML = CARDS.map(card => {
+      document.getElementById('cards-list-container').innerHTML = CARDS.map(card => {
         const isDone = state.completedCards.includes(card.id);
         return `
           <div class="card-item ${isDone ? 'completed' : ''}">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
               <span class="chip chip-xp">+${card.xp} XP</span>
               ${isDone ? '<span style="color: var(--olive); font-weight: 800;">✓ Ολοκληρώθηκε</span>' : ''}
             </div>
             <h4 style="font-size: 16px; font-weight: 800;">${card.title}</h4>
             <p class="text-muted" style="font-size: 14px; margin: 6px 0 12px;">${card.question}</p>
-            ${isDone ? `
-              <div style="background: var(--sand); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 13px; font-style: italic;">
-                "${state.cardAnswers[card.id] || 'Ολοκληρώθηκε'}"
-              </div>
-            ` : `
-              <button type="button" class="btn btn-secondary btn-pill" onclick="openCardModal('${card.id}')">
-                Γράψε τη σκέψη σου
-              </button>
-            `}
+            ${isDone
+              ? `<div style="background: var(--sand); border-radius: 8px; padding: 8px 10px; font-size: 13px; font-style: italic;">"${state.cardAnswers[card.id] || 'Ολοκληρώθηκε'}"</div>`
+              : `<button type="button" class="btn btn-secondary btn-pill" onclick="openCardModal('${card.id}')">Γράψε τη σκέψη σου</button>`}
           </div>
         `;
       }).join('');
     }
 
     window.openChallengeModal = function(challengeId) {
-      // Find challenge
       let found = null;
-      LEVELS.forEach(l => {
-        l.challenges.forEach(c => {
-          if (c.id === challengeId) found = c;
-        });
-      });
+      LEVELS.forEach(l => l.challenges.forEach(c => { if (c.id === challengeId) found = c; }));
       if (!found) return;
 
       currentSelectedChallenge = found;
+      selWho = 'alone';
+      selCount = '1';
       preRatingValue = 5;
       postRatingValue = 7;
 
       document.getElementById('challenge-modal-title').textContent = found.title;
       document.getElementById('challenge-modal-desc').textContent = found.desc;
       const chip = document.getElementById('modal-challenge-chip');
-      chip.textContent = `${found.difficulty} (+${found.xp} XP)`;
-      chip.className = `chip ${found.difficulty === 'Εύκολη' ? 'chip-easy' : (found.difficulty === 'Μεσαία' ? 'chip-medium' : 'chip-hard')}`;
+      chip.textContent = `${found.difficulty} (βάση ${found.xp} XP)`;
+      chip.className = `chip ${getDiffChipClass(found.difficulty)}`;
 
-      // Reset steps
+      document.querySelectorAll('#social-who-grid .social-btn').forEach(b => b.classList.toggle('active', b.dataset.who === 'alone'));
+      document.querySelectorAll('#social-count-grid .social-btn').forEach(b => b.classList.toggle('active', b.dataset.count === '1'));
+      updateChallengeXpPreview();
+
       document.getElementById('challenge-step-before').style.display = 'block';
       document.getElementById('challenge-step-after').style.display = 'none';
-      document.getElementById('challenge-step-result').style.display = 'none';
-
-      // Build 1-10 rating buttons for step 1
-      renderRatingButtons('rating-before-container', preRatingValue, (val) => { preRatingValue = val; });
+      renderRatingButtons('rating-before-container', preRatingValue, (v) => { preRatingValue = v; });
 
       document.getElementById('modal-challenge').classList.add('active');
     };
+
+    document.querySelectorAll('#social-who-grid .social-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selWho = btn.dataset.who;
+        document.querySelectorAll('#social-who-grid .social-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updateChallengeXpPreview();
+      });
+    });
+
+    document.querySelectorAll('#social-count-grid .social-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selCount = btn.dataset.count;
+        document.querySelectorAll('#social-count-grid .social-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updateChallengeXpPreview();
+      });
+    });
 
     function renderRatingButtons(containerId, activeVal, onSelect) {
       const container = document.getElementById(containerId);
@@ -2538,62 +2809,56 @@
         btn.type = 'button';
         btn.className = `rating-btn ${i === activeVal ? 'active' : ''}`;
         btn.textContent = i;
-        btn.addEventListener('click', () => {
+        btn.onclick = () => {
           container.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           onSelect(i);
-        });
+        };
         container.appendChild(btn);
       }
     }
 
-    // Modal Action listeners
     document.getElementById('btn-challenge-not-now').addEventListener('click', () => {
       document.getElementById('modal-challenge').classList.remove('active');
-      announce('Κανένα πρόβλημα! Μπορείς να το δοκιμάσεις όποτε νιώσεις έτοιμη.');
     });
 
     document.getElementById('btn-challenge-did-it').addEventListener('click', () => {
       document.getElementById('challenge-step-before').style.display = 'none';
       document.getElementById('challenge-step-after').style.display = 'block';
-      renderRatingButtons('rating-after-container', postRatingValue, (val) => { postRatingValue = val; });
+      renderRatingButtons('rating-after-container', postRatingValue, (v) => { postRatingValue = v; });
     });
 
     document.getElementById('btn-challenge-submit-rating').addEventListener('click', () => {
       if (!currentSelectedChallenge) return;
 
       const diff = postRatingValue - preRatingValue;
-      let msg = '';
-      if (diff > 0) {
-        msg = `Η άνεσή σου ανέβηκε κατά ${diff} ${diff === 1 ? 'βαθμό' : 'βαθμούς'}! 🌟`;
-      } else if (diff === 0) {
-        msg = 'Μπράβο που το έκανες! Κάθε προσπάθεια χτίζει σταθερή εξοικείωση. 💪';
-      } else {
-        msg = 'Συγχαρητήρια για το θάρρος σου! Το να το τολμήσεις είναι η μεγαλύτερη νίκη. 🌟';
-      }
+      const comfortMsg = diff > 0
+        ? `Η άνεσή σου ανέβηκε κατά ${diff} ${diff === 1 ? 'βαθμό' : 'βαθμούς'}! 🌟`
+        : 'Μπράβο σου για τη δράση και το θάρρος σου! 💪';
 
-      // Record completion
       if (!state.completedChallenges.includes(currentSelectedChallenge.id)) {
         state.completedChallenges.push(currentSelectedChallenge.id);
       }
-      state.comfortRatings[currentSelectedChallenge.id] = {
-        before: preRatingValue,
-        after: postRatingValue,
-        diff: diff
-      };
+      state.challengeCounts[currentSelectedChallenge.id] = (state.challengeCounts[currentSelectedChallenge.id] || 0) + 1;
+      state.comfortRatings[currentSelectedChallenge.id] = { before: preRatingValue, after: postRatingValue, diff };
 
-      addXp(currentSelectedChallenge.xp, `Πρόκληση: ${currentSelectedChallenge.title}`);
+      let earnedXp = calculateSocialXp(currentSelectedChallenge.xp, selWho, selCount);
+      if (state.challengeCounts[currentSelectedChallenge.id] > 1 && selWho === 'alone' && selCount === '1') {
+        earnedXp = Math.max(5, Math.round(earnedXp * 0.6));
+      }
 
-      // Show result step
-      document.getElementById('challenge-step-after').style.display = 'none';
-      const resultBox = document.getElementById('challenge-step-result');
-      resultBox.style.display = 'block';
-      document.getElementById('challenge-result-message').textContent = msg;
-      document.getElementById('challenge-result-xp').textContent = `Κέρδισες +${currentSelectedChallenge.xp} XP!`;
-    });
+      if (selWho !== 'alone' || selCount !== '1') {
+        if (!state.earnedBadges.includes('b_social_spark')) state.earnedBadges.push('b_social_spark');
+      }
 
-    document.getElementById('btn-challenge-finish').addEventListener('click', () => {
       document.getElementById('modal-challenge').classList.remove('active');
+
+      addXp(earnedXp, `Πρόκληση: ${currentSelectedChallenge.title}`, currentSelectedChallenge.zone, {
+        title: `Ολοκλήρωσες: ${currentSelectedChallenge.title}!`,
+        subtitle: `${comfortMsg} (+${earnedXp} XP)`,
+        shareText: `Μόλις ολοκλήρωσα την πρόκληση «${currentSelectedChallenge.title}» στο Αθήνα Quest! 🎉`
+      });
+
       renderChallengesScreen();
     });
 
@@ -2607,44 +2872,69 @@
       const card = CARDS.find(c => c.id === cardId);
       if (!card) return;
       currentSelectedCard = card;
-
       document.getElementById('card-modal-title').textContent = card.title;
       document.getElementById('card-modal-question').textContent = card.question;
       document.getElementById('card-modal-textarea').value = state.cardAnswers[card.id] || '';
       document.getElementById('modal-card').classList.add('active');
     };
-
     document.getElementById('btn-close-card-modal').addEventListener('click', () => {
       document.getElementById('modal-card').classList.remove('active');
     });
-
     document.getElementById('btn-submit-card').addEventListener('click', () => {
       if (!currentSelectedCard) return;
       const text = document.getElementById('card-modal-textarea').value.trim();
-
-      if (!state.completedCards.includes(currentSelectedCard.id)) {
-        state.completedCards.push(currentSelectedCard.id);
-        state.cardAnswers[currentSelectedCard.id] = text;
-        addXp(currentSelectedCard.xp, `Κάρτα: ${currentSelectedCard.title}`);
-      } else {
-        state.cardAnswers[currentSelectedCard.id] = text;
-        saveState(state);
-      }
+      const isNew = !state.completedCards.includes(currentSelectedCard.id);
+      if (isNew) state.completedCards.push(currentSelectedCard.id);
+      state.cardAnswers[currentSelectedCard.id] = text;
 
       document.getElementById('modal-card').classList.remove('active');
+      if (isNew) {
+        addXp(currentSelectedCard.xp, `Κάρτα: ${currentSelectedCard.title}`, null, {
+          title: 'Υπέροχος Αναστοχασμός!',
+          subtitle: `Ολοκλήρωσες την κάρτα «${currentSelectedCard.title}»`,
+          shareText: `Ολοκλήρωσα μια κάρτα αναστοχασμού στο Αθήνα Quest! 💭✨`
+        });
+      } else {
+        saveState(state);
+      }
       renderChallengesScreen();
     });
 
     /* ==========================================================================
-       SCREEN 5: QUIZ LOGIC (Hidden [ΕΠΑΛΗΘΕΥΣΕ] Questions, No Timer, Gentle Tone)
+       SCREEN 5: MINDSET PROGRESS QUIZ WITH COMPARISON
        ========================================================================== */
-    // Filter out questions with [ΕΠΑΛΗΘΕΥΣΕ]
     const verifiedQuestions = QUESTIONS.filter(q => !q.q.includes('[ΕΠΑΛΗΘΕΥΣΕ]') && q.verified !== false);
     let currentQuizIndex = 0;
+    let currentQuizScore = 0;
+
+    function renderQuizHistoryBanner() {
+      const banner = document.getElementById('quiz-history-banner');
+      if (state.quizHistory.length === 0) {
+        banner.style.display = 'none';
+        return;
+      }
+      const latest = state.quizHistory[0];
+      const prev = state.quizHistory[1];
+      let compText = '';
+      if (prev) {
+        const diff = latest.pct - prev.pct;
+        compText = diff > 0
+          ? `<span style="color: var(--olive); font-weight: 800;">(+${diff}% άνοδος σε σχέση με την προηγούμενη φορά! 📈)</span>`
+          : (diff === 0 ? 'Σταθερή ισορροπία σκέψης!' : 'Κάθε φορά μαθαίνεις κάτι νέο!');
+      }
+      banner.style.display = 'block';
+      banner.innerHTML = `
+        <div style="font-size: 13px; font-weight: 800; color: var(--sea);">📊 Τελευταίος Δείκτης Τρόπου Σκέψης (${latest.date})</div>
+        <div style="font-size: 16px; font-weight: 800; margin-top: 4px;">
+          Ευελιξία Σκέψης: ${latest.pct}% ${compText}
+        </div>
+      `;
+    }
 
     function renderQuizScreen() {
+      renderQuizHistoryBanner();
+
       if (currentQuizIndex >= verifiedQuestions.length) {
-        // Quiz completed
         renderQuizCompletion();
         return;
       }
@@ -2653,24 +2943,20 @@
       const total = verifiedQuestions.length;
 
       document.getElementById('quiz-step-label').textContent = `Ερώτηση ${currentQuizIndex + 1} από ${total}`;
-      const fillPct = ((currentQuizIndex + 1) / total) * 100;
-      document.getElementById('quiz-progress-fill').style.width = `${fillPct}%`;
-
+      document.getElementById('quiz-progress-fill').style.width = `${((currentQuizIndex + 1) / total) * 100}%`;
       document.getElementById('quiz-question-text').textContent = q.q;
 
       const optsBox = document.getElementById('quiz-options-container');
       optsBox.innerHTML = '';
-      const feedback = document.getElementById('quiz-feedback-box');
-      feedback.style.display = 'none';
-      const nextBtn = document.getElementById('quiz-next-btn');
-      nextBtn.style.display = 'none';
+      document.getElementById('quiz-feedback-box').style.display = 'none';
+      document.getElementById('quiz-next-btn').style.display = 'none';
 
       q.options.forEach((optText, idx) => {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'quiz-opt-btn';
         btn.innerHTML = `<span style="font-weight: 800; color: var(--sea);">${String.fromCharCode(65 + idx)})</span> ${optText}`;
-        btn.addEventListener('click', () => selectQuizAnswer(idx));
+        btn.onclick = () => selectQuizAnswer(idx);
         optsBox.appendChild(btn);
       });
     }
@@ -2684,21 +2970,19 @@
       const nextBtn = document.getElementById('quiz-next-btn');
 
       if (selectedIndex === q.answer) {
+        currentQuizScore++;
         opts[selectedIndex].classList.add('correct');
-        feedback.className = 'quiz-feedback success';
-        feedback.innerHTML = `<strong>Σωστά (+5 XP)! 🎉</strong><br>${q.explain}`;
-        feedback.style.display = 'block';
-        addXp(5, 'Σωστή απάντηση στο Quiz');
+        feedback.innerHTML = `<strong>Ευέλικτη Σκέψη (+5 XP)! 🎉</strong><br>${q.explain}`;
+        addXp(5, 'Τεστ Σκέψης (Σωστή απάντηση)');
       } else {
         opts[selectedIndex].classList.add('wrong');
         opts[q.answer].classList.add('correct');
-        feedback.className = 'quiz-feedback info';
         feedback.innerHTML = `<strong>Μια άλλη οπτική:</strong><br>${q.explain}`;
-        feedback.style.display = 'block';
       }
 
+      feedback.style.display = 'block';
       nextBtn.style.display = 'block';
-      nextBtn.textContent = currentQuizIndex < verifiedQuestions.length - 1 ? 'Επόμενη Ερώτηση' : 'Ολοκλήρωση Quiz';
+      nextBtn.textContent = currentQuizIndex < verifiedQuestions.length - 1 ? 'Επόμενη Ερώτηση' : 'Δες τη Σύγκριση Προόδου';
     }
 
     document.getElementById('quiz-next-btn').addEventListener('click', () => {
@@ -2707,40 +2991,70 @@
     });
 
     function renderQuizCompletion() {
-      const quizBox = document.getElementById('quiz-box');
-      quizBox.innerHTML = `
-        <div style="text-align: center; padding: 20px 0;">
-          <div style="font-size: 40px; margin-bottom: 12px;">🌟</div>
-          <h3 style="font-size: 22px; color: var(--sea); margin-bottom: 8px;">Ολοκλήρωσες το Quiz!</h3>
-          <p class="text-muted" style="margin-bottom: 20px;">
-            Μπράβο για τον χρόνο που αφιέρωσες στις σκέψεις σου. Κάθε αναστοχασμός σε φέρνει πιο κοντά στην άνεση με την πόλη.
-          </p>
-          <button type="button" class="btn btn-primary btn-block" onclick="resetQuiz()">
-            Επανάληψη Quiz
-          </button>
+      const total = verifiedQuestions.length;
+      const pct = Math.round((currentQuizScore / total) * 100);
+      const prevAttempt = state.quizHistory[0] || null;
+
+      state.quizHistory.unshift({
+        date: new Date().toLocaleDateString('el-GR'),
+        score: currentQuizScore,
+        total,
+        pct
+      });
+      saveState(state);
+      renderQuizHistoryBanner();
+
+      let compareHtml = '';
+      if (prevAttempt) {
+        const diff = pct - prevAttempt.pct;
+        compareHtml = diff > 0
+          ? `<div class="xp-preview-banner" style="color: var(--olive);">Προηγούμενη φορά: ${prevAttempt.pct}% ➔ Σήμερα: ${pct}% (+${diff}% βελτίωση!) 🚀</div>`
+          : `<div class="xp-preview-banner">Προηγούμενη φορά: ${prevAttempt.pct}% ➔ Σήμερα: ${pct}%</div>`;
+      }
+
+      addXp(15, 'Ολοκλήρωση Τεστ Τρόπου Σκέψης', null, {
+        title: `Σκορ Τρόπου Σκέψης: ${pct}%!`,
+        subtitle: prevAttempt ? `Σύγκριση: ${prevAttempt.pct}% ➔ ${pct}%` : 'Ολοκλήρωσες το πρώτο σου Τεστ Τρόπου Σκέψης!',
+        shareText: `Πέτυχα ${pct}% ευέλικτη σκέψη στο Αθήνα Quest! 🧠✨`
+      });
+
+      document.getElementById('quiz-box').innerHTML = `
+        <div style="text-align: center; padding: 14px 0;">
+          <div style="font-size: 40px; margin-bottom: 8px;">🧠✨</div>
+          <h3 style="font-size: 22px; color: var(--sea); margin-bottom: 6px;">Αποτέλεσμα: ${pct}%</h3>
+          ${compareHtml}
+          <p class="text-muted" style="margin-bottom: 18px;">Μπορείς να ξανακάνεις το τεστ όποτε θέλεις για να παρακολουθείς την πρόοδό σου!</p>
+          <button type="button" class="btn btn-primary btn-block" onclick="resetQuiz()">Νέα Δοκιμή Τεστ</button>
         </div>
       `;
     }
 
     window.resetQuiz = function() {
       currentQuizIndex = 0;
+      currentQuizScore = 0;
+      // Restore quiz-box structure
+      document.getElementById('quiz-box').innerHTML = `
+        <h3 id="quiz-question-text" style="font-size: 18px; margin-bottom: 12px; line-height: 1.35;"></h3>
+        <div class="quiz-options" id="quiz-options-container"></div>
+        <div class="quiz-feedback" id="quiz-feedback-box" style="display: none;"></div>
+        <button type="button" class="btn btn-primary btn-block" id="quiz-next-btn" style="margin-top: 16px; display: none;">Επόμενη Ερώτηση</button>
+      `;
+      document.getElementById('quiz-next-btn').addEventListener('click', () => {
+        currentQuizIndex++;
+        renderQuizScreen();
+      });
       renderQuizScreen();
     };
 
     /* ==========================================================================
-       SCREEN 6: HIDDEN TREASURES RENDERER
+       SCREEN 6: TREASURES
        ========================================================================== */
     function renderTreasuresScreen() {
-      const container = document.getElementById('treasures-list-container');
-      container.innerHTML = TREASURES.map(t => {
+      document.getElementById('treasures-list-container').innerHTML = TREASURES.map(t => {
         const isFound = state.foundTreasures.includes(t.id);
-        let isUnlocked = false;
-
-        if (t.unlockCondition.type === 'level') {
-          isUnlocked = state.level >= t.unlockCondition.value;
-        } else if (t.unlockCondition.type === 'card') {
-          isUnlocked = state.completedCards.includes(t.unlockCondition.value);
-        }
+        let isUnlocked = t.unlockCondition.type === 'level'
+          ? state.level >= t.unlockCondition.value
+          : state.completedCards.includes(t.unlockCondition.value);
 
         return `
           <div class="treasure-card ${isFound ? 'found' : ''}">
@@ -2751,22 +3065,12 @@
               </div>
               <span style="font-size: 24px;">${isFound ? '✨' : (isUnlocked ? '🗝️' : '🔒')}</span>
             </div>
-
-            <p style="font-size: 14px; color: var(--ink); margin: 8px 0;">${t.hint}</p>
-
-            ${isFound ? `
-              <div class="treasure-reward-box">
-                <span style="font-weight: 800; color: #9C5802;">Ανταμοιβή:</span> ${t.reward}
-              </div>
-            ` : (isUnlocked ? `
-              <button type="button" class="btn btn-primary btn-pill" style="margin-top: 8px;" onclick="openTreasureModal('${t.id}')">
-                Βρήκα τον θησαυρό!
-              </button>
-            ` : `
-              <span class="text-muted" style="font-size: 12px; font-weight: 700; display: block; margin-top: 8px;">
-                Ξεκλειδώνει με: ${t.unlockCondition.type === 'level' ? `Επίπεδο ${t.unlockCondition.value}` : 'Κάρτα «Τρία καλά»'}
-              </span>
-            `)}
+            <p style="font-size: 14px; margin: 8px 0;">${t.hint}</p>
+            ${isFound
+              ? `<div class="treasure-reward-box"><strong>Ανταμοιβή:</strong> ${t.reward}</div>`
+              : (isUnlocked
+                ? `<button type="button" class="btn btn-primary btn-pill" onclick="openTreasureModal('${t.id}')">Βρήκα τον θησαυρό!</button>`
+                : `<span class="text-muted" style="font-size: 12px; font-weight: 700;">Ξεκλειδώνει με: ${t.unlockCondition.type === 'level' ? `Επίπεδο ${t.unlockCondition.value}` : 'Κάρτα «Τρία καλά»'}</span>`)}
           </div>
         `;
       }).join('');
@@ -2777,15 +3081,12 @@
       const t = TREASURES.find(item => item.id === treasureId);
       if (!t) return;
       currentSelectedTreasure = t;
-
       document.getElementById('treasure-modal-title').textContent = t.name;
       document.getElementById('treasure-modal-hint').textContent = t.hint;
       document.getElementById('treasure-modal-reward-text').textContent = t.reward;
-
       const isFound = state.foundTreasures.includes(t.id);
       document.getElementById('treasure-modal-reward').style.display = isFound ? 'block' : 'none';
       document.getElementById('btn-claim-treasure').style.display = isFound ? 'none' : 'block';
-
       document.getElementById('modal-treasure').classList.add('active');
     };
 
@@ -2793,159 +3094,116 @@
       if (!currentSelectedTreasure) return;
       if (!state.foundTreasures.includes(currentSelectedTreasure.id)) {
         state.foundTreasures.push(currentSelectedTreasure.id);
-        addXp(currentSelectedTreasure.xp, `Θησαυρός: ${currentSelectedTreasure.name}`);
+        document.getElementById('modal-treasure').classList.remove('active');
+        addXp(currentSelectedTreasure.xp, `Θησαυρός: ${currentSelectedTreasure.name}`, null, {
+          title: `Βρήκες τον Θησαυρό!`,
+          subtitle: `${currentSelectedTreasure.name}: «${currentSelectedTreasure.reward}»`,
+          shareText: `Ανακάλυψα τον κρυμμένο θησαυρό «${currentSelectedTreasure.name}» στο Αθήνα Quest! 🗝️✨`
+        });
       }
-
-      document.getElementById('treasure-modal-reward').style.display = 'block';
-      document.getElementById('btn-claim-treasure').style.display = 'none';
       renderTreasuresScreen();
     });
-
     document.getElementById('btn-close-treasure-modal').addEventListener('click', () => {
       document.getElementById('modal-treasure').classList.remove('active');
     });
 
     /* ==========================================================================
-       SCREEN 7: PROFILE RENDERER
+       SCREEN 7: PROFILE
        ========================================================================== */
     function renderProfileScreen() {
       document.getElementById('profile-nickname-title').textContent = state.nickname || 'Εξερευνήτρια';
       document.getElementById('profile-level-chip').textContent = `Επίπεδο ${state.level} • ${LEVEL_NAMES[state.level - 1]}`;
+      document.getElementById('profile-avatar-box').innerHTML = renderAvatarSvg(state.avatar.base, state.avatar.hairColor, state.avatar.accessory, 100);
 
-      // Profile avatar box
-      const avatarBox = document.getElementById('profile-avatar-box');
-      avatarBox.innerHTML = renderAvatarSvg(state.avatar.base, state.avatar.hairColor, state.avatar.accessory, 100);
-
-      // XP Progress Bar
-      const currentLevelXp = XP_THRESHOLDS[state.level - 1] || 0;
-      const nextLevelXp = XP_THRESHOLDS[state.level] || (currentLevelXp + 250);
-      const span = nextLevelXp - currentLevelXp;
-      const userProgress = state.xp - currentLevelXp;
-      const pct = Math.min(Math.max((userProgress / span) * 100, 0), 100);
+      const currLvlXp = XP_THRESHOLDS[state.level - 1] || 0;
+      const nextLvlXp = XP_THRESHOLDS[state.level] || (currLvlXp + 300);
+      const pct = Math.min(100, Math.max(0, ((state.xp - currLvlXp) / (nextLvlXp - currLvlXp)) * 100));
 
       document.getElementById('profile-xp-bar-fill').style.width = `${pct}%`;
       document.getElementById('profile-current-xp-txt').textContent = `${state.xp} XP`;
-      document.getElementById('profile-next-xp-txt').textContent = state.level >= LEVEL_NAMES.length 
-        ? 'Ανώτατο επίπεδο!' 
-        : `Επόμενο επίπεδο στα ${nextLevelXp} XP`;
+      document.getElementById('profile-next-xp-txt').textContent = state.level >= LEVEL_NAMES.length
+        ? 'Ανώτατο επίπεδο!'
+        : `Επόμενο επίπεδο στα ${nextLvlXp} XP`;
 
-      // Badges
-      const badgesContainer = document.getElementById('profile-badges-container');
-      badgesContainer.innerHTML = BADGES.map(b => {
+      document.getElementById('profile-badges-container').innerHTML = BADGES.map(b => {
         const isUnlocked = state.earnedBadges.includes(b.id);
         return `
           <div class="badge-card ${isUnlocked ? 'unlocked' : 'locked'}">
             <span class="badge-icon">${b.icon}</span>
             <div style="font-weight: 800; font-size: 14px;">${b.name}</div>
             <div class="text-muted" style="font-size: 11px;">${b.desc}</div>
+            ${isUnlocked ? `<button type="button" class="btn btn-secondary btn-pill" style="min-height: 30px; padding: 2px 10px; font-size: 11px;" onclick="shareBadge('${b.name}')">📤 Μοιράσου</button>` : ''}
           </div>
         `;
       }).join('');
 
-      // History
       const histList = document.getElementById('profile-history-list');
-      if (state.history.length === 0) {
-        histList.innerHTML = '<p class="text-muted" style="text-align: center; padding: 10px;">Δεν υπάρχουν ακόμη καταγεγραμμένες ενέργειες.</p>';
-      } else {
-        histList.innerHTML = state.history.slice(0, 8).map(h => `
+      histList.innerHTML = state.history.length === 0
+        ? '<p class="text-muted" style="text-align: center; padding: 10px;">Δεν υπάρχουν ακόμη ενέργειες.</p>'
+        : state.history.slice(0, 10).map(h => `
           <div class="history-item">
-            <div>
-              <span style="font-weight: 700;">${h.text}</span>
-              <span class="text-muted" style="display: block; font-size: 11px;">${h.timestamp}</span>
-            </div>
+            <div><span style="font-weight: 700;">${h.text}</span><span class="text-muted" style="display: block; font-size: 11px;">${h.timestamp}</span></div>
             <span class="chip chip-xp">+${h.xp} XP</span>
           </div>
         `).join('');
-      }
     }
 
+    window.shareBadge = function(badgeName) {
+      shareAchievement('Αθήνα Quest', `Μόλις ξεκλείδωσα την κονκάρδα «${badgeName}» στο Αθήνα Quest! 🏆✨`);
+    };
+
+    document.getElementById('profile-share-progress-btn').addEventListener('click', () => {
+      shareAchievement('Αθήνα Quest', `Είμαι στο Επίπεδο ${state.level} («${LEVEL_NAMES[state.level - 1]}») με ${state.xp} XP στο Αθήνα Quest! 🏛️🌟`);
+    });
+
     /* ==========================================================================
-       MODAL CONTROLS & LISTENERS
+       GENERAL EVENT LISTENERS & INIT
        ========================================================================== */
-    // Help Sheet
-    document.getElementById('btn-open-help').addEventListener('click', () => {
-      document.getElementById('modal-help').classList.add('active');
-    });
-    document.getElementById('btn-close-help').addEventListener('click', () => {
-      document.getElementById('modal-help').classList.remove('active');
-    });
+    document.getElementById('btn-open-help').addEventListener('click', () => document.getElementById('modal-help').classList.add('active'));
+    document.getElementById('btn-close-help').addEventListener('click', () => document.getElementById('modal-help').classList.remove('active'));
 
-    // Level-up close
-    document.getElementById('btn-close-levelup').addEventListener('click', () => {
-      document.getElementById('modal-levelup').classList.remove('active');
-    });
-
-    // Reset flow
-    document.getElementById('btn-open-reset').addEventListener('click', () => {
-      document.getElementById('modal-reset').classList.add('active');
-    });
-    document.getElementById('btn-cancel-reset').addEventListener('click', () => {
-      document.getElementById('modal-reset').classList.remove('active');
-    });
-    document.getElementById('btn-confirm-reset').addEventListener('click', () => {
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-      } catch (e) {
-        console.warn(e);
-      }
+    document.getElementById('btn-open-reset').addEventListener('click', () => document.getElementById('modal-reset').classList.add('active'));
+    document.getElementById('btn-cancel-reset').addEventListener('click', () => document.getElementById('modal-reset').classList.remove('active'));
+    document.getElementById('btn-confirm-reset').addEventListener('click', async () => {
+      try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+      await clearPhotoDB();
       state = Object.assign({}, defaultState);
+      state.zoneXp = Object.assign({}, defaultState.zoneXp);
       inMemoryState = null;
       document.getElementById('modal-reset').classList.remove('active');
       updateHeader();
       switchScreen('screen-welcome');
-      announce('Η πρόοδος μηδενίστηκε επιτυχώς.');
     });
 
-    // Navigation Tab Bar Clicks
     document.querySelectorAll('.nav-item').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const targetScreen = btn.getAttribute('data-screen');
-        if (targetScreen) switchScreen(targetScreen);
-      });
+      btn.addEventListener('click', () => switchScreen(btn.getAttribute('data-screen')));
     });
 
-    // Header Profile button click
-    document.getElementById('header-profile-btn').addEventListener('click', () => {
-      switchScreen('screen-profile');
-    });
-
-    // Edit avatar button in Profile
+    document.getElementById('header-profile-btn').addEventListener('click', () => switchScreen('screen-profile'));
     document.getElementById('profile-edit-avatar-btn').addEventListener('click', () => {
       initAvatarCreator();
       switchScreen('screen-avatar');
     });
+    document.getElementById('banner-treasures-shortcut').addEventListener('click', () => switchScreen('screen-treasures'));
 
-    // Map screen shortcut to treasures
-    document.getElementById('banner-treasures-shortcut').addEventListener('click', () => {
-      switchScreen('screen-treasures');
-    });
-
-    // Challenges Tabs
     document.getElementById('tab-btn-challenges').addEventListener('click', () => {
       document.getElementById('tab-btn-challenges').classList.add('active');
-      document.getElementById('tab-btn-challenges').setAttribute('aria-selected', 'true');
       document.getElementById('tab-btn-cards').classList.remove('active');
-      document.getElementById('tab-btn-cards').setAttribute('aria-selected', 'false');
       document.getElementById('tab-content-challenges').style.display = 'block';
       document.getElementById('tab-content-cards').style.display = 'none';
     });
-
     document.getElementById('tab-btn-cards').addEventListener('click', () => {
       document.getElementById('tab-btn-cards').classList.add('active');
-      document.getElementById('tab-btn-cards').setAttribute('aria-selected', 'true');
       document.getElementById('tab-btn-challenges').classList.remove('active');
-      document.getElementById('tab-btn-challenges').setAttribute('aria-selected', 'false');
       document.getElementById('tab-content-cards').style.display = 'block';
       document.getElementById('tab-content-challenges').style.display = 'none';
     });
 
-    // Welcome Screen "Ξεκίνα"
     document.getElementById('btn-start-welcome').addEventListener('click', () => {
       initAvatarCreator();
       switchScreen('screen-avatar');
     });
 
-    // Save Avatar button
     document.getElementById('btn-save-avatar').addEventListener('click', () => {
       state.avatar = Object.assign({}, tempAvatar);
       state.nickname = tempNickname || 'Εξερευνήτρια';
@@ -2955,21 +3213,10 @@
       switchScreen('screen-map');
     });
 
-    /* ==========================================================================
-       APP INITIALIZATION
-       ========================================================================== */
-    function init() {
+    window.addEventListener('DOMContentLoaded', () => {
       updateHeader();
-
-      if (state.onboardingComplete) {
-        switchScreen('screen-map');
-      } else {
-        switchScreen('screen-welcome');
-      }
-    }
-
-    // Run on load
-    window.addEventListener('DOMContentLoaded', init);
+      switchScreen(state.onboardingComplete ? 'screen-map' : 'screen-welcome');
+    });
   </script>
 </body>
 </html>
